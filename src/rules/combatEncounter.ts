@@ -1,0 +1,307 @@
+import type {
+  CharacterDraft,
+} from "../config/characterTemplate.ts";
+import { STAT_IDS, type StatId } from "../types/character.ts";
+import { DAMAGE_TYPES, RESISTANCE_LEVELS } from "./resistances.ts";
+import { resolveDicePool } from "./combat.ts";
+import { calculateInitiative } from "./stats.ts";
+import {
+  buildCharacterDerivedValues,
+  getCurrentStatValue,
+  getResolvedResistanceLevel,
+  getSkillBreakdown,
+  getStatBreakdown,
+} from "../config/characterRuntime.ts";
+import type {
+  CharacterEncounterSnapshot,
+  CombatEncounterParty,
+  CombatEncounterParticipantInput,
+  CombatEncounterState,
+  EncounterBreakdownField,
+  EncounterCombatSummaryField,
+} from "../types/combatEncounter.ts";
+import { createTimestampedId, getIsoTimestamp } from "../lib/ids.ts";
+import { rollD10Faces } from "../lib/dice.ts";
+import type { SharedItemRecord } from "../types/items.ts";
+import type { EncounterOwnedMobInstance } from "../types/authoring.ts";
+const HIGHLIGHTED_SKILL_IDS = ["intimidation", "stealth", "alertness"] as const;
+
+function normalizeStatusTag(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, "_");
+}
+
+function getVisibleEncounterStatusTags(sheet: CharacterDraft): string[] {
+  const tags = sheet.statusTags ?? [];
+  const hasCrowdControlTag = tags.some((tag) =>
+    normalizeStatusTag(tag.id).startsWith("crowd_control:") ||
+    normalizeStatusTag(tag.label).startsWith("controlled_by_")
+  );
+
+  return tags
+    .filter((tag) => {
+      if (!hasCrowdControlTag) {
+        return true;
+      }
+
+      return (
+        normalizeStatusTag(tag.id) !== "paralyzed" &&
+        normalizeStatusTag(tag.label) !== "paralyzed"
+      );
+    })
+    .map((tag) => tag.label);
+}
+
+export function buildEncounterParticipantInput(
+  characterId: string,
+  ownerRole: "player" | "dm",
+  sheet: CharacterDraft,
+  partyId: string | null = null,
+  itemsById: Record<string, SharedItemRecord> = {}
+): CombatEncounterParticipantInput {
+  return {
+    characterId,
+    ownerRole,
+    displayName: sheet.name.trim() || "Unnamed Character",
+    dex: getCurrentStatValue(sheet, "DEX", itemsById),
+    wits: getCurrentStatValue(sheet, "WITS", itemsById),
+    partyId,
+  };
+}
+
+export function createCombatEncounter(
+  label: string,
+  participants: CombatEncounterParticipantInput[],
+  parties: CombatEncounterParty[] = [],
+  encounterOwnedMobs: EncounterOwnedMobInstance[] = []
+): CombatEncounterState {
+  if (participants.length === 0) {
+    throw new RangeError("Add at least one combatant before starting the encounter.");
+  }
+
+  const uniquePartyIds = new Set<string>();
+  parties.forEach((party) => {
+    if (uniquePartyIds.has(party.partyId)) {
+      throw new RangeError(`Duplicate party detected: ${party.partyId}`);
+    }
+
+    uniquePartyIds.add(party.partyId);
+  });
+
+  const uniqueIds = new Set<string>();
+  const resolvedParticipants = participants.map((participant) => {
+    if (uniqueIds.has(participant.characterId)) {
+      throw new RangeError(`Duplicate combatant detected: ${participant.characterId}`);
+    }
+
+    uniqueIds.add(participant.characterId);
+    const participantPartyId = participant.partyId ?? null;
+    if (participantPartyId !== null && !uniquePartyIds.has(participantPartyId)) {
+      throw new RangeError(
+        `Combatant ${participant.displayName} was assigned to an unknown party.`
+      );
+    }
+
+    const initiativePool = Math.max(0, calculateInitiative(participant.dex, participant.wits));
+    const initiativeFaces =
+      participant.initiativeFaces !== undefined
+        ? participant.initiativeFaces
+        : rollD10Faces(initiativePool);
+
+    if (initiativeFaces.length !== initiativePool) {
+      throw new RangeError(
+        `Initiative roll for ${participant.displayName} must contain ${initiativePool} dice results.`
+      );
+    }
+
+    const initiativeSuccesses = resolveDicePool(initiativeFaces, initiativePool).successes;
+
+    return {
+      characterId: participant.characterId,
+      ownerRole: participant.ownerRole,
+      displayName: participant.displayName,
+      initiativePool,
+      initiativeFaces,
+      initiativeSuccesses,
+      dex: participant.dex,
+      wits: participant.wits,
+      partyId: participantPartyId,
+      controllerCharacterId: participant.controllerCharacterId ?? null,
+      summonTemplateId: participant.summonTemplateId ?? null,
+      sourcePowerId: participant.sourcePowerId ?? null,
+    };
+  });
+
+  resolvedParticipants.sort((left, right) => {
+    if (right.initiativeSuccesses !== left.initiativeSuccesses) {
+      return right.initiativeSuccesses - left.initiativeSuccesses;
+    }
+
+    if (right.initiativePool !== left.initiativePool) {
+      return right.initiativePool - left.initiativePool;
+    }
+
+    if (right.dex !== left.dex) {
+      return right.dex - left.dex;
+    }
+
+    if (right.wits !== left.wits) {
+      return right.wits - left.wits;
+    }
+
+    return left.displayName.localeCompare(right.displayName);
+  });
+
+  return {
+    encounterId: createTimestampedId("encounter"),
+    label: label.trim() || "Combat Encounter",
+    parties: [...parties],
+    participants: resolvedParticipants,
+    createdAt: getIsoTimestamp(),
+    turnState: {
+      round: 1,
+      activeParticipantIndex: 0,
+      activeParticipantId: resolvedParticipants[0]?.characterId ?? null,
+    },
+    encounterOwnedMobs: encounterOwnedMobs.slice(),
+    transientCombatants: [],
+    ongoingStates: [],
+    activityLog: [],
+  };
+}
+
+export function buildCharacterEncounterSnapshot(
+  sheet: CharacterDraft,
+  itemsById: Record<string, SharedItemRecord> = {}
+): CharacterEncounterSnapshot {
+  const derived = buildCharacterDerivedValues(sheet, itemsById);
+  const currentStats = derived.currentStats;
+
+  const combatSummary: EncounterCombatSummaryField[] = [
+    {
+      id: "hp",
+      label: "HP",
+      value:
+        derived.temporaryHp > 0
+          ? `${sheet.currentHp} / ${derived.maxHp} (+${derived.temporaryHp} temp)`
+          : `${sheet.currentHp} / ${derived.maxHp}`,
+      selectableValue: null,
+    },
+    {
+      id: "mana",
+      label: "Mana",
+      value: `${derived.currentMana} / ${derived.maxMana}`,
+      selectableValue: null,
+    },
+    {
+      id: "initiative",
+      label: "Initiative",
+      value: derived.initiative,
+      selectableValue: derived.initiative,
+    },
+    {
+      id: "ac",
+      label: "AC",
+      value: derived.armorClass,
+      selectableValue: null,
+    },
+    {
+      id: "dr",
+      label: "DR",
+      value: derived.damageReduction,
+      selectableValue: null,
+    },
+    {
+      id: "soak",
+      label: "Soak",
+      value: derived.soak,
+      selectableValue: null,
+    },
+    {
+      id: "melee_attack",
+      label: "Melee Attack",
+      value: derived.meleeAttack,
+      selectableValue: derived.meleeAttack,
+    },
+    {
+      id: "ranged_attack",
+      label: "Ranged Attack",
+      value: derived.rangedAttack,
+      selectableValue: derived.rangedAttack,
+    },
+    {
+      id: "melee_damage",
+      label: "Melee Damage",
+      value: derived.meleeDamage,
+      selectableValue: derived.meleeDamage,
+    },
+    {
+      id: "ranged_damage",
+      label: "Ranged Damage",
+      value: derived.rangedDamage,
+      selectableValue: null,
+    },
+    {
+      id: "movement",
+      label: "Movement",
+      value: derived.movement,
+      selectableValue: derived.movementSelectable,
+    },
+  ];
+
+  const stats: EncounterBreakdownField[] = STAT_IDS.map((statId) => ({
+    id: statId,
+    label: statId,
+    value: currentStats[statId],
+    summary: getStatBreakdown(sheet, statId, itemsById).summary,
+    detail: getStatBreakdown(sheet, statId, itemsById).detail,
+  }));
+
+  const highlightedSkills: EncounterBreakdownField[] = HIGHLIGHTED_SKILL_IDS.map((skillId) => {
+    const breakdown = getSkillBreakdown(sheet, skillId, itemsById);
+    const skill = sheet.skills.find((entry) => entry.id === skillId);
+    return {
+      id: skillId,
+      label: skill?.label ?? skillId,
+      value: breakdown.value,
+      summary: breakdown.summary,
+      detail: breakdown.detail,
+    };
+  });
+
+  const visibleResistances = DAMAGE_TYPES.flatMap((damageType) => {
+    const level = getResolvedResistanceLevel(sheet, damageType.id, itemsById);
+    if (level === 0) {
+      return [];
+    }
+
+    const rule = RESISTANCE_LEVELS[level];
+    return [
+      {
+        id: damageType.id,
+        label: damageType.label,
+        levelLabel: rule.label,
+        multiplierLabel: `(x${rule.damageMultiplier})`,
+      },
+    ];
+  });
+
+  return {
+    combatSummary,
+    stats,
+    highlightedSkills,
+    visibleResistances,
+    inspiration: derived.totalInspiration,
+    inspirationDetail:
+      derived.temporaryInspiration > 0
+        ? `Base ${derived.permanentInspiration} + Temp ${derived.temporaryInspiration}`
+        : `Base ${derived.permanentInspiration}`,
+    statusTags: getVisibleEncounterStatusTags(sheet),
+    utilityTraits: derived.utilityTraits,
+    activePowerEffects: derived.activePowerEffects.map((effect) => ({
+      id: effect.id,
+      label: effect.label,
+      summary: effect.summary,
+      source: `${effect.casterName} -> ${effect.powerName}`,
+    })),
+  };
+}

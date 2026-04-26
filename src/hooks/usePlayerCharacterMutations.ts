@@ -1,0 +1,928 @@
+import type { Dispatch, SetStateAction } from "react";
+
+import { buildCharacterDerivedValues } from "../config/characterRuntime";
+import {
+  buildItemIndex,
+  canCharacterIdentifyItem,
+  getCharacterArtifactAppraisalLevel,
+  getItemAllowedEquipSlots,
+  getItemMechanicalRole,
+  maskItemForCharacter,
+  retypeSharedItemRecord,
+} from "../lib/items.ts";
+import { resetCharacterPowerUsageScope } from "../lib/powerUsage";
+import {
+  type CharacterDraft,
+  getPowerTemplate,
+} from "../config/characterTemplate";
+import {
+  appendDmAuditEntry as appendDmAuditEntryToSheet,
+  createDmAuditEntry as createDmAuditLogEntry,
+} from "../lib/dmAudit";
+import {
+  addPowerAtLevelOne,
+  addPowerAtLevelOneOverride,
+  adjustPowerProgression,
+  adjustSkillProgression,
+  adjustStatProgression,
+  appendHistoryNote,
+  setPowerLevel,
+  setSkillBaseLevel,
+  setStatBaseLevel,
+  type RuntimeEditableField,
+  updateRuntimeFieldValue,
+  updateSheetFieldValue,
+} from "../mutations/characterSheetMutations";
+import {
+  addEquipmentReference,
+  linkSharedItemToCharacter,
+  removeCharacterItemFromEquipment,
+  removeEquipmentReference,
+  setCharacterActiveItemState,
+  setCharacterEquipmentSlotItem,
+  setCharacterInventoryItemState,
+  setCharacterOwnedItemState,
+  setCharacterWeaponHandSlotItem,
+  type EquipmentReferenceField,
+  updateEquipmentReferenceField,
+} from "../mutations/characterItemMutations.ts";
+import type { CharacterRecord, StatId } from "../types/character";
+import type {
+  ItemBlueprintId,
+  ItemBlueprintRecord,
+  ItemCategoryDefinition,
+  ItemDerivedModifierId,
+  MainEquipmentSlotId,
+  ItemSubcategoryDefinition,
+  SharedItemRecord,
+  SupplementaryEquipmentSlotId,
+  WeaponHandSlotId,
+} from "../types/items.ts";
+import type { PowerUsageResetScope } from "../types/powerUsage";
+
+type CharacterSheetUpdater =
+  | CharacterDraft
+  | ((current: CharacterDraft) => CharacterDraft);
+
+type SharedItemUpdater =
+  | SharedItemRecord
+  | ((current: SharedItemRecord) => SharedItemRecord);
+
+type UsePlayerCharacterMutationsParams = {
+  activeCharacter: CharacterRecord | null;
+  sheetState: CharacterDraft;
+  itemBlueprints: ItemBlueprintRecord[];
+  itemCategoryDefinitions: ItemCategoryDefinition[];
+  itemSubcategoryDefinitions: ItemSubcategoryDefinition[];
+  items: SharedItemRecord[];
+  xpLeftOver: number;
+  isReadOnlyView: boolean;
+  isDmView: boolean;
+  isDmEditableView: boolean;
+  dmEditMode: boolean;
+  adminOverrideMode: boolean;
+  dmEditReason: string;
+  adminOverrideReason: string;
+  editSessionStatFloor: Record<StatId, number> | null;
+  pendingPowerId: string;
+  sessionNotes: string;
+  updateCharacter: (characterId: string, updater: CharacterSheetUpdater) => void;
+  executeArtifactAppraisal: (args: {
+    casterCharacterId: string;
+    itemId: string;
+    artifactAppraisalLevel: number;
+  }) => string | null;
+  createItem: (
+    blueprintId: ItemBlueprintId,
+    overrides?: Partial<
+      Pick<
+        SharedItemRecord,
+        "name" | "baseDescription" | "bonusProfile" | "customProperties" | "knowledge" | "isArtifact"
+      >
+    >
+  ) => string;
+  updateItem: (itemId: string, updater: SharedItemUpdater) => void;
+  deleteItem: (itemId: string) => void;
+  setPendingPowerId: Dispatch<SetStateAction<string>>;
+  setSessionNotes: Dispatch<SetStateAction<string>>;
+  setAdminOverrideError: Dispatch<SetStateAction<string | null>>;
+};
+
+export type PlayerCharacterMutations = {
+  handleAppendHistory: () => void;
+  adjustStat: (statId: StatId, direction: 1 | -1) => void;
+  adjustSkill: (skillId: string, direction: 1 | -1) => void;
+  adjustPower: (powerId: string, direction: 1 | -1) => void;
+  adjustStatOverride: (statId: StatId, direction: 1 | -1) => void;
+  adjustSkillOverride: (skillId: string, direction: 1 | -1) => void;
+  adjustPowerOverride: (powerId: string, direction: 1 | -1) => void;
+  handleAddPowerOverride: () => void;
+  createSharedItem: (blueprintId: ItemBlueprintId) => void;
+  updateSharedItemField: (
+    itemId: string,
+    field: "name" | "baseDescription",
+    value: string
+  ) => void;
+  updateSharedItemBlueprint: (itemId: string, blueprintId: ItemBlueprintId) => void;
+  updateSharedItemBonusNotes: (itemId: string, value: string) => void;
+  updateSharedItemStatBonus: (itemId: string, statId: StatId, value: string) => void;
+  updateSharedItemDerivedBonus: (
+    itemId: string,
+    targetId: ItemDerivedModifierId,
+    value: string
+  ) => void;
+  updateSharedItemOwnedState: (itemId: string, isOwned: boolean) => void;
+  updateSharedItemInventoryState: (itemId: string, isCarried: boolean) => void;
+  updateSharedItemActiveState: (itemId: string, isActive: boolean) => void;
+  identifySharedItem: (itemId: string) => void;
+  maskSharedItem: (itemId: string) => void;
+  deleteSharedItem: (itemId: string) => void;
+  equipSharedItem: (itemId: string, slot?: string) => void;
+  unequipSharedItem: (itemId: string) => void;
+  updateWeaponHandSlotItem: (slot: WeaponHandSlotId, itemId: string) => void;
+  updateMainEquipmentSlotItem: (slot: MainEquipmentSlotId, itemId: string) => void;
+  updateSupplementaryEquipmentSlotItem: (
+    slot: SupplementaryEquipmentSlotId,
+    itemId: string
+  ) => void;
+  updateEquipmentEntry: (index: number, field: EquipmentReferenceField, value: string) => void;
+  addEquipmentEntry: () => void;
+  removeEquipmentEntry: (index: number) => void;
+  handleAddPower: () => void;
+  resetPowerUsage: (scope: PowerUsageResetScope) => void;
+  handleRuntimeInput: (field: RuntimeEditableField, value: string) => void;
+  updateSheetField: <K extends keyof CharacterDraft>(field: K, value: CharacterDraft[K]) => void;
+};
+
+export function usePlayerCharacterMutations({
+  activeCharacter,
+  sheetState,
+  itemBlueprints,
+  itemCategoryDefinitions,
+  itemSubcategoryDefinitions,
+  items,
+  xpLeftOver,
+  isReadOnlyView,
+  isDmView,
+  isDmEditableView,
+  dmEditMode,
+  adminOverrideMode,
+  dmEditReason,
+  adminOverrideReason,
+  editSessionStatFloor,
+  pendingPowerId,
+  sessionNotes,
+  updateCharacter,
+  executeArtifactAppraisal,
+  createItem,
+  updateItem,
+  deleteItem,
+  setPendingPowerId,
+  setSessionNotes,
+  setAdminOverrideError,
+}: UsePlayerCharacterMutationsParams): PlayerCharacterMutations {
+  const itemsById = buildItemIndex(items);
+  const itemRulesContext = {
+    itemBlueprints,
+    itemCategoryDefinitions,
+    itemSubcategoryDefinitions,
+  };
+
+  function setSheetState(updater: CharacterSheetUpdater): void {
+    if (!activeCharacter) {
+      return;
+    }
+
+    if (isReadOnlyView && !dmEditMode && !adminOverrideMode && !isDmEditableView) {
+      return;
+    }
+
+    updateCharacter(activeCharacter.id, updater);
+  }
+
+  function setItemState(itemId: string, updater: SharedItemUpdater): void {
+    if (!items.some((item) => item.id === itemId)) {
+      return;
+    }
+
+    updateItem(itemId, updater);
+  }
+
+  function createDmAuditEntry(
+    editLayer: "runtime" | "sheet" | "admin_override",
+    fieldPath: string,
+    beforeValue: unknown,
+    afterValue: unknown,
+    reason: string,
+    sourceScreen: string
+  ) {
+    if (!activeCharacter) {
+      return null;
+    }
+
+    return createDmAuditLogEntry({
+      characterId: activeCharacter.id,
+      targetOwnerRole: activeCharacter.ownerRole,
+      editLayer,
+      fieldPath,
+      beforeValue,
+      afterValue,
+      reason,
+      sourceScreen,
+    });
+  }
+
+  function appendDmAuditEntry(
+    sheet: CharacterDraft,
+    entry: ReturnType<typeof createDmAuditEntry>
+  ): CharacterDraft {
+    return appendDmAuditEntryToSheet(sheet, entry);
+  }
+
+  function requireAdminReason(): string | null {
+    const reason = adminOverrideReason.trim();
+    if (!reason) {
+      setAdminOverrideError("Admin override requires a reason.");
+      return null;
+    }
+
+    setAdminOverrideError(null);
+    return reason;
+  }
+
+  function handleAppendHistory(): void {
+    const note = sessionNotes.trim();
+    if (!note) {
+      return;
+    }
+
+    setSheetState((currentSheet) => appendHistoryNote(currentSheet, note, new Date()));
+    setSessionNotes("");
+  }
+
+  function adjustStat(statId: StatId, direction: 1 | -1): void {
+    const floorLevel = editSessionStatFloor?.[statId] ?? sheetState.statState[statId].base;
+    setSheetState((currentSheet) =>
+      adjustStatProgression(currentSheet, statId, direction, xpLeftOver, floorLevel)
+    );
+  }
+
+  function adjustSkill(skillId: string, direction: 1 | -1): void {
+    setSheetState((currentSheet) =>
+      adjustSkillProgression(currentSheet, skillId, direction, xpLeftOver)
+    );
+  }
+
+  function adjustPower(powerId: string, direction: 1 | -1): void {
+    setSheetState((currentSheet) =>
+      adjustPowerProgression(currentSheet, powerId, direction, xpLeftOver)
+    );
+  }
+
+  function adjustStatOverride(statId: StatId, direction: 1 | -1): void {
+    const reason = requireAdminReason();
+    if (!reason) {
+      return;
+    }
+
+    setSheetState((currentSheet) => {
+      const currentValue = currentSheet.statState[statId].base;
+      const nextLevel = currentValue + direction;
+      const nextSheet = setStatBaseLevel(currentSheet, statId, nextLevel);
+
+      if (nextSheet === currentSheet) {
+        return currentSheet;
+      }
+
+      return appendDmAuditEntry(
+        nextSheet,
+        createDmAuditEntry(
+          "admin_override",
+          `statState.${statId}.base`,
+          currentValue,
+          nextLevel,
+          reason,
+          "dm-character-sheet"
+        )
+      );
+    });
+  }
+
+  function adjustSkillOverride(skillId: string, direction: 1 | -1): void {
+    const reason = requireAdminReason();
+    if (!reason) {
+      return;
+    }
+
+    setSheetState((currentSheet) => {
+      const currentSkill = currentSheet.skills.find((skill) => skill.id === skillId);
+      if (!currentSkill) {
+        return currentSheet;
+      }
+
+      const nextLevel = currentSkill.base + direction;
+      const nextSheet = setSkillBaseLevel(currentSheet, skillId, nextLevel);
+      if (nextSheet === currentSheet) {
+        return currentSheet;
+      }
+
+      return appendDmAuditEntry(
+        nextSheet,
+        createDmAuditEntry(
+          "admin_override",
+          `skills.${skillId}.base`,
+          currentSkill.base,
+          nextLevel,
+          reason,
+          "dm-character-sheet"
+        )
+      );
+    });
+  }
+
+  function adjustPowerOverride(powerId: string, direction: 1 | -1): void {
+    const reason = requireAdminReason();
+    if (!reason) {
+      return;
+    }
+
+    setSheetState((currentSheet) => {
+      const currentPower = currentSheet.powers.find((power) => power.id === powerId);
+      if (!currentPower) {
+        return currentSheet;
+      }
+
+      const nextLevel = currentPower.level + direction;
+      const nextSheet = setPowerLevel(currentSheet, powerId, nextLevel);
+      if (nextSheet === currentSheet) {
+        return currentSheet;
+      }
+
+      return appendDmAuditEntry(
+        nextSheet,
+        createDmAuditEntry(
+          "admin_override",
+          `powers.${powerId}.level`,
+          currentPower.level,
+          nextLevel,
+          reason,
+          "dm-character-sheet"
+        )
+      );
+    });
+  }
+
+  function handleAddPowerOverride(): void {
+    const reason = requireAdminReason();
+    if (!reason || !pendingPowerId) {
+      return;
+    }
+
+    const template = getPowerTemplate(pendingPowerId);
+    if (!template) {
+      return;
+    }
+
+    setSheetState((currentSheet) =>
+      appendDmAuditEntry(
+        addPowerAtLevelOneOverride(currentSheet, template),
+        createDmAuditEntry(
+          "admin_override",
+          `powers.${template.id}.level`,
+          0,
+          1,
+          reason,
+          "dm-character-sheet"
+        )
+      )
+    );
+    setPendingPowerId("");
+  }
+
+  function createSharedItemHandler(blueprintId: ItemBlueprintId): void {
+    const itemId = createItem(blueprintId);
+    setSheetState((currentSheet) =>
+      appendDmAuditEntry(
+        linkSharedItemToCharacter(currentSheet, itemId),
+        createDmAuditEntry(
+          "sheet",
+          "ownedItemIds",
+          currentSheet.ownedItemIds.length,
+          currentSheet.ownedItemIds.length + 1,
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      )
+    );
+  }
+
+  function updateSharedItemField(
+    itemId: string,
+    field: "name" | "baseDescription",
+    value: string
+  ): void {
+    setItemState(itemId, (currentItem) => ({
+      ...currentItem,
+      [field]: value,
+    }));
+  }
+
+  function updateSharedItemBlueprint(itemId: string, blueprintId: ItemBlueprintId): void {
+    setItemState(itemId, (currentItem) => retypeSharedItemRecord(currentItem, blueprintId));
+  }
+
+  function updateSharedItemBonusNotes(itemId: string, value: string): void {
+    const notes = value
+      .split("\n")
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0);
+
+    setItemState(itemId, (currentItem) => ({
+      ...currentItem,
+      bonusProfile: {
+        ...currentItem.bonusProfile,
+        notes,
+      },
+    }));
+  }
+
+  function updateSharedItemStatBonus(itemId: string, statId: StatId, value: string): void {
+    const parsed = Number.parseInt(value, 10);
+
+    setItemState(itemId, (currentItem) => {
+      const nextBonuses = { ...currentItem.bonusProfile.statBonuses };
+      if (Number.isNaN(parsed) || parsed === 0) {
+        delete nextBonuses[statId];
+      } else {
+        nextBonuses[statId] = parsed;
+      }
+
+      return {
+        ...currentItem,
+        bonusProfile: {
+          ...currentItem.bonusProfile,
+          statBonuses: nextBonuses,
+        },
+      };
+    });
+  }
+
+  function updateSharedItemDerivedBonus(
+    itemId: string,
+    targetId: ItemDerivedModifierId,
+    value: string
+  ): void {
+    const parsed = Number.parseInt(value, 10);
+
+    setItemState(itemId, (currentItem) => {
+      const nextBonuses = { ...currentItem.bonusProfile.derivedBonuses };
+      if (Number.isNaN(parsed) || parsed === 0) {
+        delete nextBonuses[targetId];
+      } else {
+        nextBonuses[targetId] = parsed;
+      }
+
+      return {
+        ...currentItem,
+        bonusProfile: {
+          ...currentItem.bonusProfile,
+          derivedBonuses: nextBonuses,
+        },
+      };
+    });
+  }
+
+  function updateSharedItemOwnedState(itemId: string, isOwned: boolean): void {
+    setSheetState((currentSheet) => setCharacterOwnedItemState(currentSheet, itemId, isOwned));
+  }
+
+  function updateSharedItemInventoryState(itemId: string, isCarried: boolean): void {
+    setSheetState((currentSheet) => setCharacterInventoryItemState(currentSheet, itemId, isCarried));
+  }
+
+  function updateSharedItemActiveState(itemId: string, isActive: boolean): void {
+    setSheetState((currentSheet) => setCharacterActiveItemState(currentSheet, itemId, isActive));
+  }
+
+  function identifySharedItem(itemId: string): void {
+    if (!activeCharacter) {
+      return;
+    }
+
+    const currentItem = items.find((item) => item.id === itemId);
+    if (!currentItem) {
+      return;
+    }
+
+    const artifactAppraisalLevel = getCharacterArtifactAppraisalLevel(sheetState);
+    if (!canCharacterIdentifyItem(currentItem, artifactAppraisalLevel)) {
+      return;
+    }
+    executeArtifactAppraisal({
+      casterCharacterId: activeCharacter.id,
+      itemId,
+      artifactAppraisalLevel,
+    });
+  }
+
+  function maskSharedItem(itemId: string): void {
+    if (!activeCharacter) {
+      return;
+    }
+
+    setItemState(itemId, (item) => maskItemForCharacter(item, activeCharacter.id));
+  }
+
+  function deleteSharedItemHandler(itemId: string): void {
+    deleteItem(itemId);
+  }
+
+  function isShieldItem(item: SharedItemRecord): boolean {
+    return getItemMechanicalRole(item, itemRulesContext) === "shield";
+  }
+
+  function resolveDefaultEquipmentSlot(currentSheet: CharacterDraft, item: SharedItemRecord): string {
+    const allowedSlots = getItemAllowedEquipSlots(item, itemRulesContext);
+    if (allowedSlots.includes("weapon_primary") || allowedSlots.includes("weapon_secondary")) {
+      return chooseWeaponEquipSlot(currentSheet, item);
+    }
+
+    if (allowedSlots.includes("ring_left") || allowedSlots.includes("ring_right")) {
+      const leftRingItemId =
+        currentSheet.equipment.find((entry) => entry.slot === "ring_left")?.itemId ?? null;
+      const rightRingItemId =
+        currentSheet.equipment.find((entry) => entry.slot === "ring_right")?.itemId ?? null;
+      if (allowedSlots.includes("ring_left") && !leftRingItemId) {
+        return "ring_left";
+      }
+      if (allowedSlots.includes("ring_right") && !rightRingItemId) {
+        return "ring_right";
+      }
+      return allowedSlots[0] ?? "body";
+    }
+
+    return allowedSlots[0] ?? "body";
+  }
+
+  function chooseWeaponEquipSlot(currentSheet: CharacterDraft, item: SharedItemRecord): WeaponHandSlotId {
+    const allowedSlots = getItemAllowedEquipSlots(item, itemRulesContext).filter(
+      (slot): slot is WeaponHandSlotId => slot === "weapon_primary" || slot === "weapon_secondary"
+    );
+    const primaryItemId =
+      currentSheet.equipment.find((entry) => entry.slot === "weapon_primary")?.itemId ?? null;
+    const secondaryItemId =
+      currentSheet.equipment.find((entry) => entry.slot === "weapon_secondary")?.itemId ?? null;
+
+    if (item.combatSpec?.handsRequired === 2 && allowedSlots.includes("weapon_primary")) {
+      return "weapon_primary";
+    }
+
+    if (allowedSlots.includes("weapon_primary") && !primaryItemId) {
+      return "weapon_primary";
+    }
+
+    if (allowedSlots.includes("weapon_secondary") && !secondaryItemId) {
+      return "weapon_secondary";
+    }
+
+    return allowedSlots[0] ?? "weapon_primary";
+  }
+
+  function equipSharedItem(itemId: string, slot?: string): void {
+    const item = itemsById[itemId];
+    if (!item) {
+      return;
+    }
+
+    setSheetState((currentSheet) => {
+      const baseSheet = removeCharacterItemFromEquipment(currentSheet, itemId);
+      const nextSheet =
+        getItemAllowedEquipSlots(item, itemRulesContext).some(
+          (entry) => entry === "weapon_primary" || entry === "weapon_secondary"
+        ) || isShieldItem(item)
+          ? setCharacterWeaponHandSlotItem(
+              baseSheet,
+              slot === "weapon_primary" || slot === "weapon_secondary"
+                ? slot
+                : isShieldItem(item)
+                  ? "weapon_secondary"
+                  : chooseWeaponEquipSlot(baseSheet, item),
+              itemId,
+              itemsById,
+              itemRulesContext
+            )
+          : setCharacterEquipmentSlotItem(
+              baseSheet,
+              slot?.trim() || resolveDefaultEquipmentSlot(baseSheet, item),
+              itemId,
+              itemsById,
+              itemRulesContext
+            );
+
+      if (!isDmView) {
+        return nextSheet;
+      }
+
+      return appendDmAuditEntry(
+        nextSheet,
+        createDmAuditEntry(
+          "sheet",
+          "equipment",
+          JSON.stringify(currentSheet.equipment),
+          JSON.stringify(nextSheet.equipment),
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      );
+    });
+  }
+
+  function unequipSharedItem(itemId: string): void {
+    setSheetState((currentSheet) => {
+      const nextSheet = removeCharacterItemFromEquipment(currentSheet, itemId);
+      if (!isDmView) {
+        return nextSheet;
+      }
+
+      return appendDmAuditEntry(
+        nextSheet,
+        createDmAuditEntry(
+          "sheet",
+          "equipment",
+          JSON.stringify(currentSheet.equipment),
+          JSON.stringify(nextSheet.equipment),
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      );
+    });
+  }
+
+  function updateWeaponHandSlotItem(slot: WeaponHandSlotId, itemId: string): void {
+    setSheetState((currentSheet) =>
+      appendDmAuditEntry(
+        setCharacterWeaponHandSlotItem(currentSheet, slot, itemId, itemsById, itemRulesContext),
+        createDmAuditEntry(
+          "sheet",
+          `equipment.${slot}.itemId`,
+          currentSheet.equipment.find((entry) => entry.slot === slot)?.itemId ?? "",
+          itemId,
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      )
+    );
+  }
+
+  function updateMainEquipmentSlotItem(slot: MainEquipmentSlotId, itemId: string): void {
+    if (slot === "weapon_primary" || slot === "weapon_secondary") {
+      updateWeaponHandSlotItem(slot, itemId);
+      return;
+    }
+
+    setSheetState((currentSheet) => {
+      const resolvedSheet = setCharacterEquipmentSlotItem(
+        currentSheet,
+        slot,
+        itemId,
+        itemsById,
+        itemRulesContext
+      );
+      if (!isDmView) {
+        return resolvedSheet;
+      }
+
+      return appendDmAuditEntry(
+        resolvedSheet,
+        createDmAuditEntry(
+          "sheet",
+          `equipment.${slot}.itemId`,
+          currentSheet.equipment.find((entry) => entry.slot === slot)?.itemId ?? "",
+          itemId,
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      );
+    });
+  }
+
+  function updateSupplementaryEquipmentSlotItem(
+    slot: SupplementaryEquipmentSlotId,
+    itemId: string
+  ): void {
+    setSheetState((currentSheet) => {
+      const resolvedSheet = setCharacterEquipmentSlotItem(
+        currentSheet,
+        slot,
+        itemId,
+        itemsById,
+        itemRulesContext
+      );
+      if (!isDmView) {
+        return resolvedSheet;
+      }
+
+      return appendDmAuditEntry(
+        resolvedSheet,
+        createDmAuditEntry(
+          "sheet",
+          `equipment.${slot}.itemId`,
+          currentSheet.equipment.find((entry) => entry.slot === slot)?.itemId ?? "",
+          itemId,
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      );
+    });
+  }
+
+  function updateEquipmentEntry(index: number, field: EquipmentReferenceField, value: string): void {
+    setSheetState((currentSheet) =>
+      appendDmAuditEntry(
+        updateEquipmentReferenceField(currentSheet, index, field, value),
+        createDmAuditEntry(
+          "sheet",
+          `equipment[${index}].${field}`,
+          currentSheet.equipment[index]?.[field] ?? "",
+          value,
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      )
+    );
+  }
+
+  function addEquipmentEntryHandler(): void {
+    setSheetState((currentSheet) =>
+      appendDmAuditEntry(
+        addEquipmentReference(currentSheet),
+        createDmAuditEntry(
+          "sheet",
+          "equipment",
+          currentSheet.equipment.length,
+          currentSheet.equipment.length + 1,
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      )
+    );
+  }
+
+  function removeEquipmentEntryHandler(index: number): void {
+    setSheetState((currentSheet) =>
+      appendDmAuditEntry(
+        removeEquipmentReference(currentSheet, index),
+        createDmAuditEntry(
+          "sheet",
+          `equipment[${index}]`,
+          currentSheet.equipment[index]?.slot ?? "",
+          "",
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      )
+    );
+  }
+
+  function handleAddPower(): void {
+    if (!pendingPowerId) {
+      return;
+    }
+
+    const template = getPowerTemplate(pendingPowerId);
+    if (!template) {
+      return;
+    }
+
+    setSheetState((currentSheet) => addPowerAtLevelOne(currentSheet, template, xpLeftOver));
+    setPendingPowerId("");
+  }
+
+  function resetPowerUsage(scope: PowerUsageResetScope): void {
+    setSheetState((currentSheet) => {
+      const nextSheet = resetCharacterPowerUsageScope(currentSheet, scope);
+      if (nextSheet === currentSheet) {
+        return currentSheet;
+      }
+
+      if (!isDmView) {
+        return nextSheet;
+      }
+
+      return appendDmAuditEntry(
+        nextSheet,
+        createDmAuditEntry(
+          "runtime",
+          `powerUsageState.${scope}`,
+          currentSheet.powerUsageState[scope],
+          {},
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      );
+    });
+  }
+
+  function updateRuntimeField(field: RuntimeEditableField, rawValue: number): void {
+    if (!isDmView) {
+      return;
+    }
+
+    setSheetState((currentSheet) => {
+      const derivedSnapshot = buildCharacterDerivedValues(currentSheet, itemsById);
+      const currentValue =
+        field === "currentMana" ? derivedSnapshot.currentMana : currentSheet[field];
+      const nextSheet = updateRuntimeFieldValue(currentSheet, field, rawValue, itemsById);
+      if (nextSheet === currentSheet) {
+        return currentSheet;
+      }
+
+      const nextValue = field === "currentMana" ? nextSheet.currentMana : nextSheet[field];
+      return appendDmAuditEntry(
+        nextSheet,
+        createDmAuditEntry(
+          "runtime",
+          field,
+          currentValue,
+          nextValue,
+          dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      );
+    });
+  }
+
+  function handleRuntimeInput(field: RuntimeEditableField, value: string): void {
+    if (value.trim() === "") {
+      return;
+    }
+
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isNaN(parsed)) {
+      return;
+    }
+
+    updateRuntimeField(field, parsed);
+  }
+
+  function updateSheetField<K extends keyof CharacterDraft>(
+    field: K,
+    value: CharacterDraft[K]
+  ): void {
+    setSheetState((currentSheet) => {
+      const nextSheet = updateSheetFieldValue(currentSheet, field, value);
+      const shouldLog = isDmView && (dmEditMode || adminOverrideMode || isDmEditableView);
+
+      if (!shouldLog) {
+        return nextSheet;
+      }
+
+      return appendDmAuditEntry(
+        nextSheet,
+        createDmAuditEntry(
+          adminOverrideMode ? "admin_override" : "sheet",
+          String(field),
+          currentSheet[field],
+          value,
+          adminOverrideMode ? adminOverrideReason.trim() : dmEditReason.trim(),
+          "dm-character-sheet"
+        )
+      );
+    });
+  }
+
+  return {
+    handleAppendHistory,
+    adjustStat,
+    adjustSkill,
+    adjustPower,
+    adjustStatOverride,
+    adjustSkillOverride,
+    adjustPowerOverride,
+    handleAddPowerOverride,
+    createSharedItem: createSharedItemHandler,
+    updateSharedItemField,
+    updateSharedItemBlueprint,
+    updateSharedItemBonusNotes,
+    updateSharedItemStatBonus,
+    updateSharedItemDerivedBonus,
+    updateSharedItemOwnedState,
+    updateSharedItemInventoryState,
+    updateSharedItemActiveState,
+    identifySharedItem,
+    maskSharedItem,
+    deleteSharedItem: deleteSharedItemHandler,
+    equipSharedItem,
+    unequipSharedItem,
+    updateWeaponHandSlotItem,
+    updateMainEquipmentSlotItem,
+    updateSupplementaryEquipmentSlotItem,
+    updateEquipmentEntry,
+    addEquipmentEntry: addEquipmentEntryHandler,
+    removeEquipmentEntry: removeEquipmentEntryHandler,
+    handleAddPower,
+    resetPowerUsage,
+    handleRuntimeInput,
+    updateSheetField,
+  };
+}

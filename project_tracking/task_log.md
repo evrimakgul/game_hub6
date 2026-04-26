@@ -1,0 +1,342 @@
+# Task Log
+
+## 2026-04-24
+
+- `REALTIME-SESSION-01` completed.
+  - Added optional Supabase Auth/client wiring with email/password and Discord OAuth support.
+  - Added SQL migrations for realtime campaign/session/event/character/knowledge tables with RLS policies and realtime publication entries.
+  - Added `/dm/screen` and `/player/session` for live DM/player session operations.
+  - Added persistent session events for secret rolls, player hidden rolls, sharing, pins, and rewards.
+  - Added text/card sharing and reward packet application that updates character history, DM audit entries, local knowledge ownerships, session character rows, and persistent reward events.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `REALTIME-ACCOUNT-HARDENING-01` completed.
+  - Added sign out / exit to role selection, clarified online-login copy, made profile bootstrap tolerate legacy `profiles.user_id`, restricted DM Screen campaign listing to campaigns where the account is a DM, and added a second migration for profile/schema repair plus player-owned session character inserts.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- Added `VIEW-PERSONALIZATION-01` as the next planned implementation item.
+  - Scope: browser-local player/DM personalized page design, safe manual controls, page layout registry, presets, and auto-design recommendations.
+  - Guardrails: no hidden-info leaks, no arbitrary user JS, no unrestricted CSS, required combat information stays visible during live combat, and mobile layouts use stricter constraints.
+  - No runtime implementation or validation was run for this planning-only update.
+
+## 2026-04-20
+
+- `COMBAT-PLAYER-01` completed.
+  - Added `/player/combat` as the player-facing live combat surface and wired `Combat Mode` navigation from the player hub and participating player character sheets.
+  - Added player-safe encounter presentation that keeps initiative order and encounter activities visible while masking unknown opponents as `Opponent N`, hiding raw HP numbers, and only revealing real enemy names plus expand/collapse knowledge cards when the viewer owns `Assess Entity` knowledge for that target.
+  - Persisted `activeCombatEncounter` into the local app-flow storage payload so DM and player windows can read the same encounter state without introducing backend sync.
+  - Kept the current V1 boundary explicit: player combat mode is read-only, and combat actions still execute from the DM encounter runtime.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `AUCTION-PLAYER-01` completed.
+  - Added `/player/auction-house` as the player-facing shopping route and linked it directly from the player character-sheet inventory section.
+  - Added completed `Bid` and `Buyout` transaction handling that validates stock and character money, creates a shared item from the auction entry, assigns it to the purchasing character, deducts money, and appends a history row.
+  - Added live `stockQuantity` persistence on auction entries while preserving the original source stock text for provenance/import context.
+  - Kept the player-side `Bid` action intentionally simple for this pass: it resolves as an immediate winning-bid completion instead of opening a separate pending-bid lifecycle.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
+## 2026-04-19
+
+- Reopened implementation with Item Creation And Auction House V1.
+  - Added active tracking for:
+    - `ITEM-AUTO-01`
+    - `ITEM-CREATE-01`
+    - `AUCTION-HOUSE-01`
+  - Working assumptions for this pass:
+    - The auction workbook is a source catalog and item-seeding reference, not a full live economy engine yet.
+    - V1 auto-created items should infer the closest current blueprint safely, then preserve raw bonus/remarks text as draft notes/provenance instead of fabricating fully parsed mechanics.
+    - Item creation/edit/delete remains DM-only; player-sheet inventory stays a consumer of assigned shared items.
+    - The repo already contains unrelated uncommitted changes; this pass should work with them and not revert them.
+  - Validation pending until the implementation group lands.
+- `ITEM-AUTO-01`, `ITEM-CREATE-01`, and `AUCTION-HOUSE-01` completed together.
+  - Added a new local-first auction-entry model seeded from `references/originals/Auction House.xlsx`, plus pasted-row/JSON import parsing for replacing the catalog in-browser.
+  - Added `/dm/auction-house` as the DM-side catalog browser with filtering, detail review, linked-item visibility, and create/open item actions.
+  - Added safe auto item creation from auction entries by inferring the nearest existing blueprint, storing the `auctionEntryId` on created shared items, and preserving raw auction bonus text as draft item notes rather than forcing unsafe mechanical parsing.
+  - Expanded DM item creation with duplicate-item and auction-house entrypoints while keeping item authoring DM-only.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
+## 2026-04-17
+
+- `KNOW-V2-01` and `ITEM-VAL-01` completed together.
+  - Added a dedicated DM Knowledge Hub route for `place`, `faction`, `story`, and `custom` knowledge subject authoring, canonical revision creation, and recipient grant/share flows.
+  - Expanded player-visible knowledge browsing so mixed subject types now show type-aware labels while still reusing the existing standalone entity/revision/ownership model.
+  - Added shared-item `baseStrength`, computed `anchorValue`, and optional `anchorValueOverride` persistence, plus DM edit/list display for computed and effective value.
+  - Kept item value as item-instance data, with computed anchor values automatically recomputing on create, hydrate, update, and blueprint-sync paths.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
+## 2026-04-16
+
+- `AA-01` completed.
+  - Completed the full `Artifact Appraisal` integration on the shared world-casting and item-knowledge path without adding a parallel AA-specific system.
+  - `Artifact Appraisal` now grants ownership of the current canonical item-card revision, refreshing the canonical revision first when the shared item has changed since the latest card.
+  - Successful appraisals now append linked history rows to the exact granted revision.
+  - Player inventory visibility for hidden item bonuses now keys off ownership of the current item-card revision instead of any stale older revision.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
+## 2026-04-12
+
+- `WORLD-CAST-V1-01` completed.
+  - Added a shared casting environment model so cast preparation can target either `world` or `encounter`.
+  - Added reusable cast-form state and refactored encounter casting to reuse the shared request-building path.
+  - Added out-of-combat `Use` actions inline under `Known Powers` on the character sheet.
+  - World casting V1 now supports `Assess Entity`, `Body Reinforcement`, `Healing Touch`, and `Luminous Restoration`.
+  - Added a dedicated world execution path for mana spend, healing/resource changes, active effects, status tags, usage counters, history rows, and knowledge updates while rejecting encounter-only payloads.
+  - Moved inventory `Identify` onto the shared world-casting backend for `Artifact Appraisal` while keeping the item shortcut UI.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
+## 2026-04-11
+
+- `EQUIP-SUP-01` and `B01` completed together as Milestone 3.
+  - Added persisted per-character `enabledSupplementarySlotIds` state and a shared mutation path for enabling/disabling `orbital`, `earring`, and `charm` slots.
+  - Updated player/DM character-sheet equipment rendering so supplementary slots stay hidden until enabled and disabling an occupied supplementary slot clears only that slot's equipment entry.
+  - Added a new DM item interactions page from the dashboard for recipient selection, supplementary-slot activation, canonical item-card generation/refresh, revision inspection, and one-to-many item-card sharing.
+  - Extended the standalone Knowledge system with item-instance card builders and canonical `KnowledgeEntity.type = "item"` revision generation keyed by shared item id.
+  - Item-card sharing now grants knowledge ownerships and also syncs the shared item's learned/visible character lists for the recipients.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
+## 2026-04-10
+
+- `ITEM-REFAC-01` completed.
+  - Added persisted `ItemCategoryDefinition` and `ItemSubcategoryDefinition` records, seeded defaults, and stored them in app-flow persistence.
+  - Moved item blueprint persistence onto `categoryDefinitionId` and `subcategoryDefinitionId` while keeping legacy category/subtype inputs readable during hydration and migration.
+  - Reworked equip validation, summary labels, compact item rendering, and combat physical-attack profile resolution to use definition-driven helpers instead of hardcoded item category/subtype branches.
+  - Added DM definition-management UI and switched blueprint management to persisted category/subcategory selection.
+  - Preserved current visible behavior for shields, one-handed hand-slot fallback, rings, and existing save compatibility.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
+## 2026-03-14
+
+- `T01` Completed roadmap/doc audit and initialized task tracking.
+  - Updated `references/plan.md`, `references/project_objective.md`, and `references/current_notes.md`.
+  - Seeded `project_tracking/tasks_todo.md`, `project_tracking/tasks_done.md`, and `project_tracking/task_log.md`.
+  - Validation pending on the implementation tasks that follow.
+- `T02` Completed `powerUsageState` model, normalization, and persistence wiring.
+  - Added structured usage state types/helpers and attached them to the character draft schema.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `T03` Completed player and DM sheet usage displays and manual reset controls.
+  - Added usage summaries and reset actions on character sheet surfaces.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `T04` Completed encounter runtime foundations for turn state, transient summons, and ongoing encounter-only states.
+  - Added turn tracking, transient combatant support, ongoing state storage, and execution plumbing.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `T05` Completed `Elementalist` direct-cast support.
+  - Added elemental bolt and cantrip flows, low-level damage-type locking, split damage handling, bonus mana scaling, and necrotic living-target vulnerability.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `T06` Completed the remaining healing slice.
+  - Added wound-mend tracking, poison/disease/curse cleanup, limb-regrowth notes, and overheal-to-temporary-HP handling.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `T07` Completed passive and utility backlog support.
+  - Added passive utility traits and passive skill bonuses for Awareness, Crowd Control, Light Support, Necromancy, and Shadow Control.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `T08` Completed `Light Support` mana restore and `Expose Darkness`.
+  - Added long-rest usage tracking, direct mana restoration, and temporary resistance downgrades for darkness-based defenses.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `T09` Completed `Brute Defiance` delayed stand-up behavior under `Body Reinforcement`.
+  - Added encounter-turn revive scheduling, revive application, and daily usage tracking.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `T10` Completed `Crowd Control`.
+  - Added contest-gated cast preparation, status tags, maintenance mana, break-on-damage behavior, and encounter-only control state tracking.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `T11` Completed summons and resurrection.
+  - Added encounter-local necromancy summons, shadow soldier creation, summon dismissal/replacement, and resurrection to `1 HP` for loaded sheets.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `T12` Completed coverage and final reconciliation.
+  - Added combat casting and expanded power/runtime regression coverage.
+  - Reconciled `references/plan.md`, `references/project_objective.md`, `references/current_notes.md`, and tracking files with the implemented system.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
+## 2026-03-15
+
+- Reopened Phase 1 combat encounter completion pass after user review.
+  - Updated `references/plan.md`, `references/current_notes.md`, and `references/project_objective.md` to match the remaining actionable work instead of the earlier "completed" branch state.
+  - Added a historical reopen note to `project_tracking/tasks_done.md`.
+  - Baseline validation before new code changes: `npm run typecheck`, `npm test`, `npm run build`.
+  - Result: all three passed before the new change set started.
+- `P1-01` Re-audited the branch after user bug reports and reopened the roadmap.
+  - Replaced the prior "power runtime complete" assumption with a new active scope:
+    - combat encounter fixes
+    - minimal encounter activity log
+    - shared standalone item model
+  - Recorded user decisions:
+    - `Heal` mana cost stays `2`
+    - `Cure` unlocks at Lv3 and costs `3`
+    - healing cantrip remains `2 uses per target per day`
+    - `Crowd Control` initial cast costs `0`
+    - `Shadow Walk` is a non-damaging encounter mobility action
+    - `Expose Darkness` targets enemy parties only
+    - items move to shared standalone records with per-character knowledge state
+  - Validation deferred until code changes land.
+- `P1-02` through `P1-10` Completed the encounter correction pass.
+  - Added `Shadow Walk`, split `Heal` / `Cure`, summon dismissal, enemy-only `Expose Darkness`, upkeep-only `Crowd Control`, release control, source-linked aura cleanup, physical attacks, and an encounter activity log.
+  - Normalized target filtering so invalid summon targets are excluded from `Crowd Control` while valid summon targets remain hittable by direct damage.
+  - Assumption kept from user direction: healing does not invert into anti-undead damage in this branch; undead and shadow summons simply remain non-healable.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `P2-01` through `P2-04` Completed the shared item domain model and first engine integration pass.
+  - Added standalone shared item records, category/subtype classes, compositional `BonusProfile`, per-character knowledge state, and item-reference migration from legacy embedded sheet items.
+  - Character sheets now store item references for ownership, carried inventory, active use, and equipped slots instead of embedded item payloads.
+  - Implemented minimal item-sheet UI for shared item creation, basic bonus editing, identify/mask visibility, and loadout assignment.
+  - Item bonuses now flow into player-sheet derived values, encounter snapshots, upkeep/runtime mana bounds, damage/healing mitigation, and physical attack option selection.
+  - Migration assumption: each legacy embedded inventory row and each legacy embedded equipment row becomes its own standalone shared item record; no automatic dedupe is attempted across old rows.
+  - Assumption recorded: multi-target share UI for item knowledge remains deferred even though the data model and share helper now exist.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- Docs/tracking reopen validation completed.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `P1-BUG-01` and `P1-BUG-03` completed.
+  - Updated `src/lib/combatEncounterCasting.ts` so generic buff logs use the real action name instead of the `Cloak of Shadow` fallback.
+  - Updated `src/rules/summons.ts` and `json_refs/powers.json` so `Shadow Soldier` resolves with the correct summon mana cost, with a safe summon option fallback to level mana cost if the option omits one.
+  - Added focused regression coverage in `tests/combatEncounterCasting.test.ts`.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `P1-RULE-04` completed.
+  - Removed manual contest outcome selection from the encounter cast state, cast payload, and cast form.
+  - `Crowd Control` now auto-resolves using caster `CHA + INT` against each target's `CHA + WITS`, with ties failing.
+  - Added deterministic success, failure, and tie regression tests in `tests/combatEncounterCasting.test.ts`.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `P1-RULE-01` completed.
+  - Added undead/shadow summon classification tags in `src/rules/summons.ts` so necromancy summons are tagged `Undead` and `Shadow Soldier` is tagged `Shadow`.
+  - Added undead sheet detection in `src/rules/combatResolution.ts` and used it in encounter casting to invert healing and necrotic interactions cleanly.
+  - Healing cast applications now become `radiant` damage against `soak` when the target is undead; living-only cure/regrowth side effects stay off undead targets.
+  - Necrotic damage now heals only true undead targets instead of all non-living targets.
+  - Added regression coverage in `tests/combatResolution.test.ts`, `tests/combatEncounterCasting.test.ts`, and updated `tests/powerEffects.test.ts` typing for the extended target metadata.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `P1-RULE-02` and `P1-RULE-03` completed together.
+  - Removed `Expose Darkness` from the Light Support cast-variant list and folded the enemy debuff into the default Light Aura level-five cast.
+  - Added linked aura-target effect building so Light Aura can buff allies and apply the level-five enemy resistance debuff from the same source effect.
+  - Updated aura target management so the same Light Aura source can later add/remove enemy-party debuff targets as well as allied buff targets.
+  - Reordered encounter effect application after structural summon merges so spawned summons can receive linked aura effects in the same execution step.
+  - Summon casts now extend existing aura-source target lists when a newly spawned allied summon should inherit the active aura, covering the `Shadow Soldier` plus active `Cloak of Shadow` case.
+  - Added regression coverage in `tests/combatEncounterCasting.test.ts` and `tests/powerEffects.test.ts`.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `P1-BUG-02` completed.
+  - Encounter snapshot rendering now suppresses `Paralyzed` when a Crowd Control ownership tag is already present, so the card shows only `Controlled by <caster>`.
+  - Added snapshot regression coverage in `tests/combatEncounter.test.ts`.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `P1-UI-01` and `P1-UI-02` completed together.
+  - Replaced the inline encounter `Physical Attacks` and `Cast Power Mechanism` sections with an `Actions` popover that embeds both forms without changing their underlying mechanics.
+  - Updated encounter layout styling so the card now presents `Character Sheet`, `Actions`, and `Applied Effects` as the main sections.
+  - Relaxed encounter history sizing to a three-row minimum with vertical resizing and an eighteen-row max cap.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- Actionable Phase 1 combat encounter items are now complete.
+  - Remaining TODO entries are reminder-only (`ARCH-REM-01`) or deferred (`B01`).
+- Reopened follow-up work for character-sheet and encounter action flow updates.
+  - Added active tasks:
+    - `CS-UI-01` Derived Summary consolidation
+    - `CS-RULE-01` automatic loadout-driven physical attacks
+    - `CS-UX-01` manual `Brute Defiance` encounter trigger
+  - Locked user decisions:
+    - `Derived Summary` should show all subsections even when empty
+    - automatic physical attacks stay single-target in the UI for now
+    - physical attack math uses hit pool vs AC, then damage pool + marginal vs DR
+    - no active-weapon selector; infer from explicit two hand slots
+    - if no weapon is equipped, use brawl/fists
+    - if an equipped item is explicitly typed as brawl, use the brawl profile
+    - bow occupies both hand slots
+    - `Brute Defiance` becomes a manual encounter action
+  - Baseline validation before follow-up implementation: `npm run typecheck`, `npm test`, `npm run build`.
+- `CS-UI-01` completed.
+  - Moved `Active Effects`, `Utility Traits`, `Combat Flags`, and `Power Tracking` into `CharacterCombatSummary`.
+  - Reduced `CharacterResources` back to stored inspiration and karma only.
+  - Preserved all existing power-usage reset behavior, but relocated the controls under `Derived Summary`.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `CS-RULE-01` completed.
+  - Replaced manual `Attack Style` plus `Hits Landed` encounter flow with automatic loadout-driven physical attack resolution.
+  - Added canonical primary and secondary hand slot handling on the character sheet while preserving support for older extra loadout slots.
+  - Automatic attacks now infer profile from the equipped hand slots, roll in-system for hit and damage, and log each attack sequence with AC, marginal, DR, and final damage taken.
+  - Added dedicated physical-attack regression coverage, including brawl fallback, explicit brawl items, dual one-handed inference, bow hand-slot occupancy, and deterministic auto-resolution.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `CS-UX-01` completed.
+  - Replaced automatic turn-advance `Brute Defiance` scheduling with a manual encounter action.
+  - Added visible BR eligibility text and a `Trigger Brute Defiance` action inside the encounter `Actions` popover for characters who have the cantrip unlocked.
+  - Kept the trigger window locked to `0` through `-5 HP`, daily-use tracking intact, and revive output at `1 HP` for BR `2-4` and `4 HP` for BR `5`.
+  - Added focused regression coverage for unavailable, ineligible, spent, and successful BR revive states in `tests/combatEncounterSpecialActions.test.ts`.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `CS-UI-02` completed.
+  - Expanded the `Derived Summary` card to span the full width of the player-sheet grid by changing the `combat-card` grid-column rule.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
+## 2026-04-04
+
+- `PWR-ARCH-01` completed.
+  - Added a new `src/engine/` action/effect runtime with action classes, effect classes, and a request-building executor.
+  - Added `src/powers/` registries and spell-action modules for all currently supported powers and spells, preserving current spell behavior and `powers.json`-driven metadata.
+  - Moved passive power-derived bonuses and utility traits out of `characterRuntime.ts` hardcoded branches and into a passive provider registry.
+  - Replaced the monolithic `prepareCastRequest` spell switch with action lookup plus effect execution, and wired the manual `Brute Defiance` path through the same runtime.
+- Added `BR-BD-01` as deferred follow-up work.
+  - Target spec: `Brute Defiance` should become a passive 1/day delayed stand-up again with HP scaling `1 / 2 / 4 / 8 / 16` by `Body Reinforcement` level.
+  - No implementation or validation was done for that note.
+  - Added focused registry coverage in `tests/powerRegistry.test.ts`.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- Recorded future knowledge-card architecture notes.
+  - Agreed direction: keep `History` as an event log, but store spell/item/story intel as standalone revisioned knowledge records rather than history-only data.
+  - Agreed model direction: `KnowledgeEntity` + immutable `KnowledgeRevision` + per-character ownership, with characters allowed to own multiple revisions of the same subject.
+  - Agreed UI direction: add a character-sheet `Knowledge` area and allow history entries to link to the exact revision involved, with hover preview and click/open behavior.
+  - Added `references/knowledge_card_design.md` to capture the concrete "how" details for data model, flows, lineage, history links, and character-sheet UI.
+  - No code changes or validation were run for this note-only documentation update.
+- Recorded aura-builder architecture discussion.
+  - Current implementation: `buildActivePowerEffect(...)` is shared by both targeted buff spells and aura-source spells.
+  - Alternative noted for discussion: keep targeted buffs there, but move aura-source construction into a dedicated builder such as `buildAuraSourceEffect(...)` or `buildAuraSpellEffect(...)`.
+  - Added `AURA-ARCH-DISCUSS-01` to TODO as a discussion item, not implementation work.
+  - No code changes or validation were run for this note-only documentation update.
+- Recorded `Crowd Control` passive replacement TODOs.
+  - Added `CC-PASSIVE-01` for `Crowd Management (CM)` with `Social +1 / +2 / +3 / +4 / +5` by `Crowd Control` level.
+  - Added `CC-PASSIVE-02` for `Compulsion Guard (CG)` at `Crowd Control` level `5`, adding `Social` while defending against control effects.
+  - Renamed the active spell label from `Control Target` to `Control Entity`.
+- Recorded `Crowd Control` release-direction TODO.
+  - Added `CC-CE-01` so `Release Target` is later folded into `Control Entity` as a contextual control-management action instead of a separate spell.
+- Recorded `Elementalist` spell-separation TODO.
+  - Added `ELM-SPELL-01` to track the future refactor toward separate `Elemental Bolt`, `Elemental Cantrip`, and `Elemental Split` spells instead of the current merged multi-target `Elemental Bolt` structure.
+- Recorded `Healing` spell-structure TODO.
+  - Added `HEAL-SPELL-01` to track the future refactor toward the newer explicit `Heal Living (HL)`, `Holy Purge (HP)`, and `Healing Touch (HT)` model instead of the current mixed `Heal` / `Cure` / `Wound Mend` structure.
+  - Stored the intended replacement details: `Holy Purge` as a separate cleanse spell at `2` mana, `Healing Touch` as a separate `2/day` per-target wound-mending spell, and `Heal Living` as the healing-only spell with the existing regrowth / overheal progression preserved.
+- Recorded `Light Support` spell-structure TODO.
+  - Added `LS-SPELL-01` to track the future refactor toward the newer explicit `Let There Be Light (LTBL)`, `Lunar Bless (LB)`, `Lessen Darkness (LD)`, and `Luminous Restoration (LR)` model instead of the current compressed `Light Aura` / `Mana Restore` structure.
+  - Stored the intended replacement details: `LTBL` level `1` should be `+1 hit, +1 DR`, the later aura levels stay as specified by the newer draft, `Lunar Bless` should scale mana bonus every level, `Lessen Darkness` should be a separate linked level `5` effect that can push `RL0 -> RL-1`, and `Luminous Restoration` should unlock at level `3` with `APP / APP x2 / APP x3` scaling.
+- Recorded `Necromancy` spell-structure TODO.
+  - Added `NECRO-SPELL-01` to track the future refactor toward the newer explicit `Non-Living Warriors (NW)`, `Necrotic Touch (NT)`, `Necromancer's Bless (NB)`, and `Necromancer's Deception (ND)` model instead of the current compressed summon-template structure.
+  - Stored the intended replacement details: `NW` should own child summon types `NS`, `NSK`, and `NZ`; subtype limits should become `1 active fighter per subtype`; summon formulas/resistances/passives should move to the newer draft; `dismiss summon` should remain an internal control under summon management rather than a separate top-level spell concept.
+- Recorded `Shadow Control` spell-structure TODO.
+  - Added `SC-SPELL-01` to track the future refactor toward the newer explicit `Smoldering Shadow (SS)`, `Shadow Walk (SW)`, `Shadow Walk and Attack (SWaA)`, `Shadow Manipulation (SM)`, `Sleek Visage (SV)`, and `Shadow Fighter (SF)` model instead of the current compressed cloak/summon structure.
+  - Stored the intended replacement details: the cloak spell should lose the current intimidation bonus and use the newer duration ladder, `SWaA` should be added as a separate ambush spell, `Sleek Visage` should replace the current cosmetic cantrip naming, and `Shadow Fighter` should replace the current `Shadow Soldier` summon spec.
+- `CS-HIST-01`, `KNOW-ARCH-01`, `KNOW-SPELL-01`, `KNOW-UI-01`, and `KNOW-UI-02` completed together as Knowledge System V1.
+  - Added standalone `KnowledgeEntity`, `KnowledgeRevision`, and `KnowledgeOwnership` collections to local persistence and app state.
+  - Added migration cleanup so old embedded `intel_snapshot` history rows are discarded instead of treated as the source of truth.
+  - `Assess Entity` now creates immutable linked character-card revisions during encounter execution and writes history rows that reference the exact revision involved.
+  - Added `Game History` hover preview plus click/open revision dialog behavior for linked knowledge rows.
+  - Added a full-width inline `Knowledge` section on the character sheet with subject grouping, revision browsing, duplicate, edited-copy, share, archive, pin, compare, and DM authoring/grant flows.
+  - V1 boundary: only character cards are implemented end-to-end; item/place/faction/story/custom card creation remains future work.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `ARCH-REM-01` completed.
+  - Added `src/engine/encounterExecutionEngine.ts` as the class-based post-prepare encounter runtime.
+  - Moved prepared-request execution, history + linked-knowledge application, damage/healing/resource/status/usage-counter application, summon + ongoing-state structural merges, turn advancement, upkeep handling, aura cleanup, and encounter log generation out of `CombatEncounterPage.tsx`.
+  - `CombatEncounterPage.tsx` now builds requests, calls the engine, and commits returned state instead of owning the execution rules itself.
+  - Added focused regression coverage in `tests/encounterExecutionEngine.test.ts` for knowledge-link execution, crowd-control break handling, summon spawn/dismiss merging, upkeep drop behavior, and aura cleanup on dead sources.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+- `PWR-SPEC-02` completed.
+  - Implemented the remaining staged power TODO rewrite on top of the existing action/effect runtime and `EncounterExecutionEngine`.
+  - Restored passive delayed `Brute Defiance`, folded `Crowd Control` release into a contextual encounter action, and updated `Crowd Control` passives to `Crowd Management` plus `Compulsion Guard`.
+  - Split `Elementalist`, `Healing`, `Light Support`, `Necromancy`, and `Shadow Control` into the newer explicit spell sets and updated passive-provider outputs to the newer spec direction.
+  - Reworked summon option wiring and summon template rules for the new visible `Necromancy` and `Shadow Control` summon spells.
+  - Reconciled `references/plan.md`, `references/current_notes.md`, and `project_tracking/tasks_todo.md` so only deferred items remain open.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
+## 2026-04-05
+
+- Added new encounter-UX follow-up TODOs after reviewing visible combat action flow.
+  - `CAST-UI-STD-01` now tracks cast-form normalization so active powers consistently present `Power > Spell > ...` before any spell-specific fields.
+  - `SUMMON-UI-01` now tracks visible contextual `Dismiss Summon` actions for `Necromancy` and `Shadow Control`, since runtime support exists but the encounter UI does not expose it.
+  - `AURA-LIFECYCLE-01` now tracks the chosen aura design direction:
+    - keep dedicated aura-spell handling
+    - require explicit target selection in the cast UI
+    - keep beneficiary effects linked to the caster-owned source
+    - remove linked beneficiary effects when the source aura is canceled or lost
+  - The old deferred aura discussion note was resolved into this concrete active follow-up direction.
+- Added `INGEST-REF-01`.
+  - After cast UI standardization, aura lifecycle, and summon dismiss UI changes are implemented, update the four reverse-engineered ingestion reference JSON files so they reflect the new behavior.
+  - No implementation or validation was run for this tracking-only update.
+- `CAST-UI-STD-01`, `SUMMON-UI-01`, `AURA-LIFECYCLE-01`, and `INGEST-REF-01` completed.
+  - Active cast forms now consistently expose the `Spell` step, including single-spell powers.
+  - `Necromancy` summon casting now uses `Non-Living Warriors` as the parent spell and summon subtype selection in the `Summon` field.
+  - `Necromancy` and `Shadow Control` now expose contextual `Dismiss Summon` actions from the caster action menu.
+  - Aura casts now use explicit beneficiary selection where needed and keep linked effects source-owned so source removal clears beneficiaries.
+  - Updated the four reverse-engineered ingestion reference JSON files to match the new behavior.
+- Reconciled source notes from `T1 Supernatural Powers v1.1`.
+  - Updated `Control Entity` so level `4+` caster contests use `CHA + INT + CC level`.
+  - Kept `Assess Entity` CR caps `6 / 9 / 12 / 15 / 18` and renamed the source reference file to `references/originals/T1 Supernatural Powers_v1.1.txt`.
+  - Recorded `Awakened Insight` as implemented for temporary inspiration while deferring its uninspired-status interaction because that status mechanic does not exist yet.
+  - Deferred full `Artifact Appraisal` integration until item mechanics and item UI are ready.

@@ -1,0 +1,57 @@
+# Tasks Done
+
+- `T01` Audit roadmap/docs against the current branch and seed live task tracking.
+- `T02` Add `powerUsageState` to the character model, hydration, normalization, and persistence.
+- `T03` Add player/DM sheet reset controls and usage-counter displays.
+- `T04` Add encounter turn runtime, transient summon storage, and encounter-only ongoing state support.
+- `T05` Implement `Elementalist` main cast and cantrip.
+- `T06` Finish Healing Lv3-Lv5 and healing cantrip tracking.
+- `T07` Implement passive/utility backlog surfacing and mechanics.
+- `T08` Implement `Light Support` mana restore and `Expose Darkness`.
+- `T09` Implement `Brute Defiance` delayed stand-up cantrip under `Body Reinforcement`.
+- `T10` Implement `Crowd Control` cast flow, maintenance, and status handling.
+- `T11` Implement `Necromancy` summons, `Shadow Soldier`, and `Resurrection`.
+- `T12` Expand tests, run validation, and reconcile tracking/docs.
+- `P1-01` Re-audit docs/tracking and align the roadmap with the new combat-fix and shared-item scope.
+- `P1-02` Add `Shadow Walk` cast support and encounter action handling.
+- `P1-03` Split `Heal` and `Cure`, fix mana costs, and preserve healing cantrip limits.
+- `P1-04` Fix summon lifecycle rules: buff eligibility, healing rules, and add dismiss actions for undead summons and `Shadow Soldier`.
+- `P1-05` Fix `Expose Darkness` enemy-only targeting and ally/enemy behavior split.
+- `P1-06` Fix `Crowd Control` upkeep-only mana flow, cancel/release actions, and turn advance handling.
+- `P1-07` Fix aura lifecycle: default-allies initial application plus source-linked cleanup.
+- `P1-08` Fix `Elementalist` target validity consistency against summons and shadow entities.
+- `P1-09` Implement clickable physical attack resolution in combat encounter.
+- `P1-10` Extend encounter magical action resolution and add a minimal encounter activity log.
+- `P2-01` Design the shared item entity/domain model and storage shape.
+- `P2-02` Implement item classes, subtype classes, and compositional `BonusProfile`.
+- `P2-03` Move character sheets to item references with separate ownership, usage, and knowledge state.
+- `P2-04` Wire item bonus application hooks and minimal engine integration without overbuilding UI.
+- `V1-01` Expand tests for encounter fixes, action resolution, and shared item model behavior.
+- `V1-02` Reconcile `plan.md`, tracking files, and notes with the implemented result.
+- `NOTE 2026-03-15` Phase 1 combat encounter work reopened for a follow-up correction pass. Existing done items remain historical checkpoints and are being supplemented by the remaining actionable items in `tasks_todo.md`.
+- `P1-BUG-01` Fixed generic encounter buff log labels so they use the real action name, including `Boost Physique`.
+- `P1-BUG-03` Fixed `Shadow Soldier` summon mana resolution and covered it with summon-cost tests.
+- `P1-RULE-04` Reworked `Crowd Control` encounter casting to auto-resolve the contest in-system using caster `CHA + INT` vs target `CHA + WITS`, removed manual contest selection, and added success/failure/tie tests.
+- `P1-RULE-01` Finalized undead interaction rules so healing damages undead, necrotic heals undead, and summon sheets now carry undead/shadow classification tags.
+- `P1-RULE-02` Active `Cloak of Shadow` aura sources now auto-extend to newly created allied `Shadow Soldier` summons.
+- `P1-RULE-03` Folded `Expose Darkness` into `Light Aura` level five so ally buffs and enemy-party debuffs come from one cast and one aura source.
+- `P1-BUG-02` Adjusted encounter snapshot status-tag presentation so Crowd Control shows only `Controlled by <caster>` and suppresses duplicate `Paralyzed`.
+- `P1-UI-01` Replaced inline encounter `Physical Attacks` and `Cast Power Mechanism` sections with a single `Actions` popover while keeping `Character Sheet`, `Actions`, and `Applied Effects` as the top-level layout.
+- `P1-UI-02` Fixed encounter history sizing so it opens at three visible rows, remains vertically resizable, and caps at eighteen rows.
+- `CS-UI-01` Moved `Active Effects`, `Utility Traits`, `Combat Flags`, and `Power Tracking` into `Derived Summary` as always-visible subsections and reduced `CharacterResources` to stored resources only.
+- `CS-UI-02` Expanded the `Derived Summary` card to span the full player-sheet page width.
+- `CS-RULE-01` Replaced manual-assisted physical attacks with automatic loadout-driven resolution, canonical hand-slot inference, automatic hit and damage rolls, DR mitigation, and detailed encounter activity logging.
+- `CS-UX-01` Replaced automatic `Brute Defiance` revival with a visible manual encounter trigger, clear eligibility text, and focused regression coverage.
+- `PWR-ARCH-01` Refactored spell preparation and passive derivation into the new `Action` / `Effect` runtime, power registry, and passive provider registry while preserving current powers, spells, local saves, and encounter UI flows.
+- `CS-HIST-01` Replaced the old embedded `Assess Entity` history-only rendering path with linked knowledge revisions surfaced from `Game History`.
+- `KNOW-ARCH-01` Added standalone local-first `KnowledgeEntity`, `KnowledgeRevision`, and `KnowledgeOwnership` collections with persistence, hydration, and migration cleanup for legacy embedded intel rows.
+- `KNOW-SPELL-01` Changed `Assess Entity` to mint immutable linked character-card revisions and assign ownership to the caster during encounter resolution.
+- `KNOW-UI-01` Added exact knowledge-revision links in `Game History` with hover preview and click-to-open revision dialogs.
+- `KNOW-UI-02` Added a full-width inline `Knowledge` manager on the character sheet with revision browsing, duplicate, edited-copy, share, archive, pin, compare, and DM authoring/grant flows for character cards.
+- `ARCH-REM-01` Extracted encounter request execution, turn advance, upkeep, aura cleanup, summon lifecycle merges, and linked-knowledge/history application into a dedicated `EncounterExecutionEngine`, leaving `CombatEncounterPage.tsx` as a thin coordinator over request preparation and UI wiring.
+- `ITEM-REFAC-01` Replaced fixed item category/subtype assumptions with persisted item category and subcategory definitions, migrated blueprint persistence onto definition IDs, added DM definition management UI, and moved equip/summary/combat resolution onto definition-driven helpers while preserving save compatibility and current player-visible slot behavior.
+- `ITEM-AUTO-01` Added seeded/persisted auction-house entries plus a safe auto item-creation helper that infers the closest blueprint and preserves raw auction bonus text as draft item notes.
+- `ITEM-CREATE-01` Expanded the DM item workflow with create-from-auction and duplicate-item actions while keeping item authoring DM-only.
+- `AUCTION-HOUSE-01` Added a dedicated DM auction-house route with seeded workbook data, pasted-row import/replace support, filtering, detail review, and create/open item actions.
+- `AUCTION-PLAYER-01` Added player-side auction-house access from character sheets, completed bid/buyout shopping transactions, direct purchased-item assignment into character inventories, and live stock depletion rules.
+- `COMBAT-PLAYER-01` Added player-side combat mode with masked initiative/party/activity views, AE-based opponent reveal, player navigation hooks, and local active-encounter persistence shared with the DM combat runtime.

@@ -1,0 +1,556 @@
+import assert from "node:assert/strict";
+
+import { PLAYER_CHARACTER_TEMPLATE } from "../src/config/characterTemplate.ts";
+import {
+  buildItemIndex,
+  canViewerSeeItemBonusDetails,
+  createEmptyBonusProfile,
+  createItemBlueprintRecord,
+  createItemCategoryDefinitionRecord,
+  createItemCustomPropertyRecord,
+  createItemSubcategoryDefinitionRecord,
+  createSharedItemRecord,
+  getComputedItemAnchorValue,
+  getItemCompactHeaderSummary,
+  getEffectiveItemAnchorValue,
+  getItemVisibleRequirements,
+  getViewerFacingItemRecord,
+  normalizeItemCustomPropertyRecords,
+  setSharedItemBaseStrength,
+  setProfileNotes,
+  setProfileUtilityTraits,
+  setSharedItemAnchorValueOverride,
+  setSharedItemDerivedBonus,
+  syncSharedItemRecordWithBlueprint,
+} from "../src/lib/items.ts";
+import {
+  setCharacterEquipmentSlotItem,
+  setCharacterSupplementarySlotEnabled,
+  setCharacterWeaponHandSlotItem,
+} from "../src/mutations/characterItemMutations.ts";
+import { runTestSuite } from "./harness.ts";
+
+function createSheetWithStrength(strength: number) {
+  const sheet = PLAYER_CHARACTER_TEMPLATE.createInstance();
+  return {
+    ...sheet,
+    statState: {
+      ...sheet.statState,
+      STR: {
+        ...sheet.statState.STR,
+        base: strength,
+      },
+    },
+  };
+}
+
+export async function runItemBehaviorTests(): Promise<void> {
+  await runTestSuite("itemBehaviors", [
+    {
+      name: "custom property labels preserve spaces",
+      run: () => {
+        const property = createItemCustomPropertyRecord({
+          label: "Resistance Bundle",
+          notes: "Fire and Cold",
+        });
+        const normalized = normalizeItemCustomPropertyRecords([property]);
+
+        assert.equal(property.label, "Resistance Bundle");
+        assert.equal(property.notes, "Fire and Cold");
+        assert.equal(normalized[0]?.label, "Resistance Bundle");
+        assert.equal(normalized[0]?.notes, "Fire and Cold");
+      },
+    },
+    {
+      name: "blank editable labels remain blank instead of being reset to defaults",
+      run: () => {
+        const blueprint = createItemBlueprintRecord({
+          id: "blueprint:blank-text",
+          label: "",
+          defaultName: "  ",
+        });
+        const category = createItemCategoryDefinitionRecord({
+          id: "category:blank-text",
+          name: "",
+        });
+        const subcategory = createItemSubcategoryDefinitionRecord({
+          id: "subcategory:blank-text",
+          categoryId: "melee",
+          name: "  ",
+        });
+        const property = createItemCustomPropertyRecord({
+          id: "property:blank-text",
+          label: "",
+        });
+
+        assert.equal(blueprint.label, "");
+        assert.equal(blueprint.defaultName, "  ");
+        assert.equal(category.name, "");
+        assert.equal(subcategory.name, "  ");
+        assert.equal(property.label, "");
+      },
+    },
+    {
+      name: "synced items preserve blank names and spaces in visible instance notes",
+      run: () => {
+        const blueprint = createItemBlueprintRecord({
+          id: "blueprint:item-text",
+          label: "Blueprint",
+          defaultName: "Fallback Name",
+        });
+        const item = syncSharedItemRecordWithBlueprint(
+          {
+            ...createSharedItemRecord(blueprint.id, {}, [blueprint]),
+            name: "",
+            baseDescription: "Visible note with spaces ",
+          },
+          blueprint
+        );
+
+        assert.equal(item.name, "");
+        assert.equal(item.baseDescription, "Visible note with spaces ");
+      },
+    },
+    {
+      name: "profile note fields preserve spaces while still dropping empty lines",
+      run: () => {
+        const profileWithTraits = setProfileUtilityTraits(createEmptyBonusProfile(), [
+          "Quick Draw ",
+          "   ",
+          " Heavy Pull",
+        ]);
+        const profileWithNotes = setProfileNotes(createEmptyBonusProfile(), [
+          "Can move 10 m with attack ",
+          "",
+          " Uses move action",
+        ]);
+
+        assert.deepEqual(profileWithTraits.utilityTraits, ["Quick Draw ", " Heavy Pull"]);
+        assert.deepEqual(profileWithNotes.notes, [
+          "Can move 10 m with attack ",
+          " Uses move action",
+        ]);
+      },
+    },
+    {
+      name: "item bonus detail visibility is gated by item-card ownership",
+      run: () => {
+        const item = createSharedItemRecord("weapon:one_handed", {
+          id: "item-card-gated-1",
+          name: "Hidden Blade",
+          bonusProfile: {
+            ...createEmptyBonusProfile(),
+            derivedBonuses: { melee_damage: 2 },
+          },
+          knowledge: {
+            learnedCharacterIds: ["player-1"],
+            visibleCharacterIds: ["player-1"],
+          },
+        });
+
+        assert.equal(
+          canViewerSeeItemBonusDetails(item, "player-1", false, false),
+          false
+        );
+        assert.equal(
+          canViewerSeeItemBonusDetails(item, "player-1", true, false),
+          true
+        );
+      },
+    },
+    {
+      name: "new shared items default to base strength zero and computed anchor value",
+      run: () => {
+        const item = createSharedItemRecord("weapon:one_handed", {
+          id: "item-anchor-default-1",
+          name: "Anchor Blade",
+        });
+
+        assert.equal(item.baseStrength, 0);
+        assert.equal(item.anchorValueOverride, null);
+        assert.equal(item.anchorValue, 1);
+      },
+    },
+    {
+      name: "item anchor value follows bonus strength and base strength formula",
+      run: () => {
+        const item = setSharedItemBaseStrength(
+          createSharedItemRecord("weapon:one_handed", {
+            id: "item-anchor-formula-1",
+            name: "Formula Blade",
+            bonusProfile: {
+              ...createEmptyBonusProfile(),
+              derivedBonuses: { melee_damage: 2 },
+            },
+          }),
+          3
+        );
+
+        assert.equal(getComputedItemAnchorValue(item), (((4 * 49_977) + 1) * 4));
+        assert.equal(item.anchorValue, (((4 * 49_977) + 1) * 4));
+      },
+    },
+    {
+      name: "editing base strength or PP-affecting bonuses recomputes anchor value while override stays effective",
+      run: () => {
+        const baseItem = createSharedItemRecord("weapon:one_handed", {
+          id: "item-anchor-update-1",
+          name: "Mutable Blade",
+        });
+        const withBaseStrength = setSharedItemBaseStrength(baseItem, 2);
+        const withBonuses = setSharedItemDerivedBonus(withBaseStrength, "melee_damage", 1);
+        const withOverride = setSharedItemAnchorValueOverride(withBonuses, 777_777);
+        const synced = syncSharedItemRecordWithBlueprint(
+          setSharedItemDerivedBonus(withOverride, "melee_damage", 2),
+          createItemBlueprintRecord({
+            id: withOverride.blueprintId,
+            label: "Mutable Blade Blueprint",
+            defaultName: "Mutable Blade",
+          })
+        );
+
+        assert.equal(withBaseStrength.anchorValue, (((0 * 49_977) + 1) * 3));
+        assert.equal(withBonuses.anchorValue, (((2 * 49_977) + 1) * 3));
+        assert.equal(synced.anchorValue, (((4 * 49_977) + 1) * 3));
+        assert.equal(synced.anchorValueOverride, 777_777);
+        assert.equal(getEffectiveItemAnchorValue(synced), 777_777);
+      },
+    },
+    {
+      name: "shields can occupy the secondary hand slot",
+      run: () => {
+        const shield = createSharedItemRecord("armor:shield_heavy", {
+          id: "shield-1",
+          name: "Turtle Shield",
+        });
+        const itemsById = buildItemIndex([shield]);
+        const nextSheet = setCharacterWeaponHandSlotItem(
+          PLAYER_CHARACTER_TEMPLATE.createInstance(),
+          "weapon_secondary",
+          shield.id,
+          itemsById
+        );
+
+        assert.equal(
+          nextSheet.equipment.find((entry) => entry.slot === "weapon_secondary")?.itemId,
+          shield.id
+        );
+      },
+    },
+    {
+      name: "shields selected into primary hand normalize to secondary hand",
+      run: () => {
+        const shield = createSharedItemRecord("armor:shield_light", {
+          id: "shield-2",
+          name: "Buckler",
+        });
+        const itemsById = buildItemIndex([shield]);
+        const nextSheet = setCharacterWeaponHandSlotItem(
+          PLAYER_CHARACTER_TEMPLATE.createInstance(),
+          "weapon_primary",
+          shield.id,
+          itemsById
+        );
+
+        assert.equal(
+          nextSheet.equipment.find((entry) => entry.slot === "weapon_primary")?.itemId ?? null,
+          null
+        );
+        assert.equal(
+          nextSheet.equipment.find((entry) => entry.slot === "weapon_secondary")?.itemId,
+          shield.id
+        );
+      },
+    },
+    {
+      name: "shields are blocked by a two-handed primary weapon",
+      run: () => {
+        const greatsword = createSharedItemRecord("weapon:two_handed", {
+          id: "weapon-2h",
+          name: "Greatsword",
+        });
+        const shield = createSharedItemRecord("armor:shield_heavy", {
+          id: "shield-3",
+          name: "Tower Shield",
+        });
+        const itemsById = buildItemIndex([greatsword, shield]);
+        const strongSheet = createSheetWithStrength(4);
+        const sheetWithWeapon = setCharacterWeaponHandSlotItem(
+          strongSheet,
+          "weapon_primary",
+          greatsword.id,
+          itemsById
+        );
+        const nextSheet = setCharacterWeaponHandSlotItem(
+          sheetWithWeapon,
+          "weapon_secondary",
+          shield.id,
+          itemsById
+        );
+
+        assert.equal(
+          nextSheet.equipment.find((entry) => entry.slot === "weapon_primary")?.itemId,
+          greatsword.id
+        );
+        assert.equal(
+          nextSheet.equipment.find((entry) => entry.slot === "weapon_secondary")?.itemId,
+          greatsword.id
+        );
+      },
+    },
+    {
+      name: "one-handed primary weapon can coexist with an off-hand shield",
+      run: () => {
+        const sword = createSharedItemRecord("weapon:one_handed", {
+          id: "weapon-1h",
+          name: "Sword",
+        });
+        const shield = createSharedItemRecord("armor:shield_light", {
+          id: "shield-4",
+          name: "Round Shield",
+        });
+        const itemsById = buildItemIndex([sword, shield]);
+        const sheetWithSword = setCharacterWeaponHandSlotItem(
+          PLAYER_CHARACTER_TEMPLATE.createInstance(),
+          "weapon_primary",
+          sword.id,
+          itemsById
+        );
+        const nextSheet = setCharacterWeaponHandSlotItem(
+          sheetWithSword,
+          "weapon_secondary",
+          shield.id,
+          itemsById
+        );
+
+        assert.equal(
+          nextSheet.equipment.find((entry) => entry.slot === "weapon_primary")?.itemId,
+          sword.id
+        );
+        assert.equal(
+          nextSheet.equipment.find((entry) => entry.slot === "weapon_secondary")?.itemId,
+          shield.id
+        );
+      },
+    },
+    {
+      name: "minimum STR blocks equipping oversized weapons until the requirement is met",
+      run: () => {
+        const oversized = createSharedItemRecord("melee:oversized", {
+          id: "weapon-oversized-strength",
+          name: "Oversized Blade",
+        });
+        const itemsById = buildItemIndex([oversized]);
+        const weakSheet = createSheetWithStrength(0);
+        const strongSheet = createSheetWithStrength(8);
+
+        const blockedSheet = setCharacterWeaponHandSlotItem(
+          weakSheet,
+          "weapon_primary",
+          oversized.id,
+          itemsById
+        );
+        const equippedSheet = setCharacterWeaponHandSlotItem(
+          strongSheet,
+          "weapon_primary",
+          oversized.id,
+          itemsById
+        );
+
+        assert.equal(
+          blockedSheet.equipment.find((entry) => entry.slot === "weapon_primary")?.itemId ?? null,
+          null
+        );
+        assert.equal(
+          equippedSheet.equipment.find((entry) => entry.slot === "weapon_primary")?.itemId,
+          oversized.id
+        );
+        assert.equal(
+          equippedSheet.equipment.find((entry) => entry.slot === "weapon_secondary")?.itemId,
+          oversized.id
+        );
+      },
+    },
+    {
+      name: "visible requirements prefer canonical minimum STR over stale manual lines",
+      run: () => {
+        const oversized = createSharedItemRecord("melee:oversized", {
+          id: "weapon-requirement-dedupe",
+          name: "Oversized Blade",
+        });
+        const updated = {
+          ...oversized,
+          combatSpec: {
+            ...oversized.combatSpec,
+            minimumStrength: 8,
+          },
+          requirements: ["Minimum STR 6 to wield.", "Minimum STR 8 to wield."],
+        };
+
+        assert.deepEqual(getItemVisibleRequirements(updated), ["Minimum STR 8 to wield."]);
+        assert.match(getItemCompactHeaderSummary(updated), /Minimum STR 8 to wield\./);
+        assert.doesNotMatch(getItemCompactHeaderSummary(updated), /Minimum STR 6 to wield\./);
+      },
+    },
+    {
+      name: "viewer without an item card sees the concealed blueprint-facing version plus visible instance note",
+      run: () => {
+        const item = createSharedItemRecord("melee:oversized", {
+          id: "concealed-item-1",
+          name: "cok saasali bir kilic",
+          baseDescription: "mystical whisper",
+          isArtifact: true,
+          bonusProfile: {
+            ...createEmptyBonusProfile(),
+            statBonuses: { STR: 3 },
+            derivedBonuses: { melee_damage: 3 },
+          },
+        });
+
+        const concealed = getViewerFacingItemRecord(item, {
+          hasOwnedItemCard: false,
+          revealAll: false,
+        });
+
+        assert.equal(concealed.name, "Oversized Weapon");
+        assert.equal(concealed.baseDescription, "mystical whisper");
+        assert.equal(concealed.isArtifact, false);
+        assert.deepEqual(concealed.bonusProfile, createEmptyBonusProfile());
+        assert.equal(concealed.customProperties.length, 0);
+        assert.match(getItemCompactHeaderSummary(concealed), /mystical whisper/);
+        assert.doesNotMatch(getItemCompactHeaderSummary(concealed), /Bonus:/);
+        assert.doesNotMatch(getItemCompactHeaderSummary(concealed), /cok saasali bir kilic/);
+      },
+    },
+    {
+      name: "shield summaries use the secondary hand slot label",
+      run: () => {
+        const shield = createSharedItemRecord("armor:shield_heavy", {
+          id: "shield-summary",
+          name: "Tower Shield",
+        });
+
+        assert.match(
+          getItemCompactHeaderSummary(shield),
+          /Slot: Secondary Hand/
+        );
+      },
+    },
+    {
+      name: "two-handed equip writes one anchor across both occupied hands",
+      run: () => {
+        const bow = createSharedItemRecord("weapon:bow", {
+          id: "weapon-anchor-bow",
+          name: "Ash Bow",
+        });
+        const itemsById = buildItemIndex([bow]);
+        const strongSheet = createSheetWithStrength(6);
+        const nextSheet = setCharacterWeaponHandSlotItem(
+          strongSheet,
+          "weapon_primary",
+          bow.id,
+          itemsById
+        );
+
+        assert.deepEqual(
+          nextSheet.equipment
+            .filter((entry) => entry.slot === "weapon_primary" || entry.slot === "weapon_secondary")
+            .map((entry) => [entry.slot, entry.itemId, entry.anchorSlot]),
+          [
+            ["weapon_primary", bow.id, "weapon_primary"],
+            ["weapon_secondary", bow.id, "weapon_primary"],
+          ]
+        );
+      },
+    },
+    {
+      name: "clearing a follower hand slot clears the whole anchored group",
+      run: () => {
+        const bow = createSharedItemRecord("weapon:bow", {
+          id: "weapon-follower-bow",
+          name: "Ash Bow",
+        });
+        const itemsById = buildItemIndex([bow]);
+        const strongSheet = createSheetWithStrength(6);
+        const equippedSheet = setCharacterWeaponHandSlotItem(
+          strongSheet,
+          "weapon_primary",
+          bow.id,
+          itemsById
+        );
+        const clearedSheet = setCharacterWeaponHandSlotItem(
+          equippedSheet,
+          "weapon_secondary",
+          "",
+          itemsById
+        );
+
+        assert.deepEqual(
+          clearedSheet.equipment
+            .filter((entry) => entry.slot === "weapon_primary" || entry.slot === "weapon_secondary")
+            .map((entry) => [entry.slot, entry.itemId, entry.anchorSlot]),
+          [
+            ["weapon_primary", null, null],
+            ["weapon_secondary", null, null],
+          ]
+        );
+      },
+    },
+    {
+      name: "two-handed summaries show both occupied hand slots",
+      run: () => {
+        const weapon = createSharedItemRecord("weapon:two_handed", {
+          id: "weapon-summary",
+          name: "Greatsword",
+        });
+
+        assert.match(
+          getItemCompactHeaderSummary(weapon),
+          /Slots: Primary Hand \+ Secondary Hand/
+        );
+      },
+    },
+    {
+      name: "crossbow summaries show armor penetration",
+      run: () => {
+        const crossbow = createSharedItemRecord("weapon:crossbow_heavy", {
+          id: "weapon-summary-crossbow",
+          name: "Heavy Crossbow",
+        });
+
+        assert.match(getItemCompactHeaderSummary(crossbow), /Armor Penetration: 2/);
+      },
+    },
+    {
+      name: "disabling a supplementary slot clears that equipped slot",
+      run: () => {
+        const earring = createSharedItemRecord("rings:earring", {
+          id: "earring-1",
+          name: "Silver Stud",
+        });
+        const itemsById = buildItemIndex([earring]);
+        const enabledSheet = {
+          ...PLAYER_CHARACTER_TEMPLATE.createInstance(),
+          enabledSupplementarySlotIds: ["earring" as const],
+        };
+        const equippedSheet = setCharacterEquipmentSlotItem(
+          enabledSheet,
+          "earring",
+          earring.id,
+          itemsById
+        );
+        const disabledSheet = setCharacterSupplementarySlotEnabled(
+          equippedSheet,
+          "earring",
+          false
+        );
+
+        assert.deepEqual(disabledSheet.enabledSupplementarySlotIds, []);
+        assert.equal(
+          disabledSheet.equipment.find((entry) => entry.slot === "earring")?.itemId ?? null,
+          null
+        );
+      },
+    },
+  ]);
+}

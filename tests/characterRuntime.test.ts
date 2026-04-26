@@ -1,0 +1,249 @@
+import assert from "node:assert/strict";
+
+import {
+  buildCharacterDerivedValues,
+  getCurrentSkillValue,
+} from "../src/config/characterRuntime.ts";
+import { buildItemIndex, createSharedItemRecord } from "../src/lib/items.ts";
+import {
+  normalizeCharacterDraft,
+  PLAYER_CHARACTER_TEMPLATE,
+} from "../src/config/characterTemplate.ts";
+import { runTestSuite } from "./harness.ts";
+
+export async function runCharacterRuntimeTests(): Promise<void> {
+  await runTestSuite("characterRuntime", [
+    {
+      name: "awareness insight grants temporary inspiration only once per session state",
+      run: () => {
+        const sheet = PLAYER_CHARACTER_TEMPLATE.createInstance();
+        sheet.powers = [
+          {
+            id: "awareness",
+            name: "Awareness",
+            level: 1,
+            governingStat: "PER",
+          },
+        ];
+
+        const normalizedOnce = normalizeCharacterDraft(sheet);
+        const normalizedTwice = normalizeCharacterDraft(normalizedOnce);
+        const derived = buildCharacterDerivedValues(normalizedTwice);
+
+        assert.equal(normalizedOnce.temporaryInspiration, 1);
+        assert.equal(normalizedOnce.awarenessInsightGranted, true);
+        assert.equal(normalizedTwice.temporaryInspiration, 1);
+        assert.equal(derived.temporaryInspiration, 1);
+        assert.equal(derived.totalInspiration, 1);
+      },
+    },
+    {
+      name: "removing awareness clears the granted temporary inspiration slot",
+      run: () => {
+        const sheet = normalizeCharacterDraft({
+          ...PLAYER_CHARACTER_TEMPLATE.createInstance(),
+          temporaryInspiration: 0,
+          powers: [
+            {
+              id: "awareness",
+              name: "Awareness",
+              level: 1,
+              governingStat: "PER",
+            },
+          ],
+        });
+
+        const withoutAwareness = normalizeCharacterDraft({
+          ...sheet,
+          powers: [],
+        });
+
+        assert.equal(withoutAwareness.awarenessInsightGranted, false);
+        assert.equal(withoutAwareness.temporaryInspiration, 0);
+      },
+    },
+    {
+      name: "passive utility traits and cantrip skill bonuses are derived from unlocked powers",
+      run: () => {
+        const sheet = PLAYER_CHARACTER_TEMPLATE.createInstance();
+        sheet.powers = [
+          {
+            id: "awareness",
+            name: "Awareness",
+            level: 3,
+            governingStat: "PER",
+          },
+          {
+            id: "crowd_control",
+            name: "Crowd Control",
+            level: 5,
+            governingStat: "CHA",
+          },
+          {
+            id: "light_support",
+            name: "Light Support",
+            level: 5,
+            governingStat: "APP",
+          },
+          {
+            id: "necromancy",
+            name: "Necromancy",
+            level: 5,
+            governingStat: "APP",
+          },
+          {
+            id: "shadow_control",
+            name: "Shadow Control",
+            level: 5,
+            governingStat: "MAN",
+          },
+        ];
+
+        const derived = buildCharacterDerivedValues(sheet);
+
+        assert.equal(getCurrentSkillValue(sheet, "social"), 5);
+        assert.equal(getCurrentSkillValue(sheet, "intimidation"), 0);
+        assert.equal(getCurrentSkillValue(sheet, "mechanics"), 0);
+        assert.equal(getCurrentSkillValue(sheet, "technology"), 0);
+        assert.equal(getCurrentSkillValue(sheet, "melee"), 3);
+        assert.deepEqual(derived.utilityTraits, [
+          "Techno-Invisibility Immunity",
+          "Compulsion Guard",
+          "Nightvision: Self + 4",
+          "Hostile Undead Ignore Unless Attacked",
+          "Cosmetic Clothing / Armor Shift",
+          "Minor Body Cosmetics",
+        ]);
+      },
+    },
+    {
+      name: "shared item references apply equipped and active item bonuses",
+      run: () => {
+        const armor = createSharedItemRecord("armor:light", {
+          id: "armor-1",
+          name: "Scout Armor",
+          bonusProfile: {
+            statBonuses: { DEX: 1 },
+            skillBonuses: { stealth: 2 },
+            derivedBonuses: { max_mana: 3 },
+            resistanceBonuses: {},
+            utilityTraits: ["Low-Light Lens"],
+            notes: ["+2 stealth"],
+            powerBonuses: {},
+            spellBonuses: {},
+          },
+        });
+        const charm = createSharedItemRecord("jewel:jewel", {
+          id: "jewel-1",
+          name: "Occult Charm",
+          bonusProfile: {
+            statBonuses: {},
+            skillBonuses: {},
+            derivedBonuses: { melee_damage: 2 },
+            resistanceBonuses: {},
+            utilityTraits: [],
+            notes: [],
+            powerBonuses: {},
+            spellBonuses: {},
+          },
+        });
+        const itemsById = buildItemIndex([armor, charm]);
+        const sheet = PLAYER_CHARACTER_TEMPLATE.createInstance();
+        sheet.ownedItemIds = ["armor-1", "jewel-1"];
+        sheet.inventoryItemIds = ["armor-1", "jewel-1"];
+        sheet.activeItemIds = ["jewel-1"];
+        sheet.equipment = [{ slot: "Armor", itemId: "armor-1", anchorSlot: null }];
+
+        const derived = buildCharacterDerivedValues(sheet, itemsById);
+
+        assert.equal(derived.currentStats.DEX, 3);
+        assert.equal(getCurrentSkillValue(sheet, "stealth", itemsById), 2);
+        assert.equal(derived.maxMana, 3);
+        assert.equal(derived.armorClass, 3);
+        assert.equal(derived.damageReduction, 1);
+        assert.equal(derived.meleeDamage, 4);
+        assert.ok(derived.utilityTraits.includes("Low-Light Lens"));
+      },
+    },
+    {
+      name: "shield blueprint grants its base defense when equipped in a normal slot",
+      run: () => {
+        const shield = createSharedItemRecord("armor:shield_light", {
+          id: "shield-1",
+          name: "Guard Shield",
+        });
+        const itemsById = buildItemIndex([shield]);
+        const sheet = PLAYER_CHARACTER_TEMPLATE.createInstance();
+        sheet.ownedItemIds = ["shield-1"];
+        sheet.inventoryItemIds = ["shield-1"];
+        sheet.equipment = [{ slot: "Shield", itemId: "shield-1", anchorSlot: null }];
+
+        const derived = buildCharacterDerivedValues(sheet, itemsById);
+
+        assert.equal(derived.damageReduction, 1);
+      },
+    },
+    {
+      name: "medium and heavy armor blueprints follow the authoritative stealth and DR baselines",
+      run: () => {
+        const mediumArmor = createSharedItemRecord("armor:medium", {
+          id: "armor-medium-1",
+          name: "Medium Armor",
+        });
+        const heavyArmor = createSharedItemRecord("armor:heavy", {
+          id: "armor-heavy-1",
+          name: "Heavy Armor",
+        });
+
+        const mediumSheet = PLAYER_CHARACTER_TEMPLATE.createInstance();
+        mediumSheet.ownedItemIds = [mediumArmor.id];
+        mediumSheet.inventoryItemIds = [mediumArmor.id];
+        mediumSheet.equipment = [{ slot: "Armor", itemId: mediumArmor.id, anchorSlot: null }];
+
+        const heavySheet = PLAYER_CHARACTER_TEMPLATE.createInstance();
+        heavySheet.ownedItemIds = [heavyArmor.id];
+        heavySheet.inventoryItemIds = [heavyArmor.id];
+        heavySheet.equipment = [{ slot: "Armor", itemId: heavyArmor.id, anchorSlot: null }];
+
+        const mediumItems = buildItemIndex([mediumArmor]);
+        const heavyItems = buildItemIndex([heavyArmor]);
+        const mediumDerived = buildCharacterDerivedValues(mediumSheet, mediumItems);
+        const heavyDerived = buildCharacterDerivedValues(heavySheet, heavyItems);
+
+        assert.equal(getCurrentSkillValue(mediumSheet, "stealth", mediumItems), -1);
+        assert.equal(mediumDerived.damageReduction, 2);
+        assert.equal(getCurrentSkillValue(heavySheet, "stealth", heavyItems), -2);
+        assert.equal(heavyDerived.initiative, 3);
+        assert.equal(heavyDerived.damageReduction, 3);
+      },
+    },
+    {
+      name: "humanoid characters gain +3 initiative only when no chest item is equipped",
+      run: () => {
+        const clothing = createSharedItemRecord("armor:clothing", {
+          id: "armor-clothing-1",
+          name: "Traveler Robes",
+        });
+        const clothingItems = buildItemIndex([clothing]);
+
+        const humanoidSheet = PLAYER_CHARACTER_TEMPLATE.createInstance();
+        const noneSheet = {
+          ...PLAYER_CHARACTER_TEMPLATE.createInstance(),
+          apparelMode: "none" as const,
+        };
+        const clothingSheet = PLAYER_CHARACTER_TEMPLATE.createInstance();
+        clothingSheet.ownedItemIds = [clothing.id];
+        clothingSheet.inventoryItemIds = [clothing.id];
+        clothingSheet.equipment = [{ slot: "body", itemId: clothing.id, anchorSlot: "body" }];
+
+        const humanoidDerived = buildCharacterDerivedValues(humanoidSheet);
+        const noneDerived = buildCharacterDerivedValues(noneSheet);
+        const clothingDerived = buildCharacterDerivedValues(clothingSheet, clothingItems);
+
+        assert.equal(humanoidDerived.initiative, 7);
+        assert.equal(noneDerived.initiative, 4);
+        assert.equal(clothingDerived.initiative, 6);
+      },
+    },
+  ]);
+}
