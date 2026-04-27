@@ -432,6 +432,10 @@ export function CharacterSheet({ snapshot, character }: CharacterSheetProps) {
                   XP {model.identity.xpUsed} / {model.identity.xpEarned}
                 </span>
               </div>
+              <div className="bio-lines" aria-label="Character biography">
+                <p>{model.identity.biographyPrimary || "No primary biography yet."}</p>
+                <p>{model.identity.biographySecondary || "No secondary biography yet."}</p>
+              </div>
             </div>
           </article>
 

@@ -137,7 +137,7 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 10px;
 }
 
 .identity-badges span,
@@ -148,6 +148,24 @@ button {
   color: #ead3a7;
   background: rgba(80, 58, 28, 0.3);
   font-size: 0.83rem;
+}
+
+.bio-lines {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.bio-lines p {
+  overflow: hidden;
+  margin: 0;
+  border-left: 2px solid rgba(107, 219, 221, 0.5);
+  padding-left: 8px;
+  color: #bfb29e;
+  font-size: 0.82rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .vital-panel {

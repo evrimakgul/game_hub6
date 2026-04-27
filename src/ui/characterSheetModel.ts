@@ -183,6 +183,8 @@ export type CharacterSheetUiModel = {
     name: string;
     concept: string;
     faction: string;
+    biographyPrimary: string;
+    biographySecondary: string;
     rank: string;
     cr: number;
     xpEarned: number;
@@ -404,6 +406,8 @@ export function buildCharacterSheetUiModel(
       name: formatCharacterName(character),
       concept: sheet.concept || "No concept",
       faction: sheet.faction || "No faction",
+      biographyPrimary: sheet.biographyPrimary,
+      biographySecondary: sheet.biographySecondary,
       rank: playerViewModel.progression.rank,
       cr: playerViewModel.progression.cr,
       xpEarned: sheet.xpEarned,
