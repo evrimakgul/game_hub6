@@ -461,17 +461,40 @@ export function CharacterSheet({ snapshot, character }: CharacterSheetProps) {
               value={formatSigned(model.combat.initiative)}
               detail={model.combat.movement}
             />
+            <MetricCard icon="shield" label="Soak" value={`${model.combat.soak}`} />
+            <MetricCard icon="walk" label="Movement" value={model.combat.movement} />
+            <MetricCard
+              icon="sword"
+              label="Melee"
+              value={formatSigned(model.combat.meleeAttack)}
+              detail={`Damage ${formatSigned(model.combat.meleeDamage)}`}
+            />
+            <MetricCard
+              icon="target"
+              label="Ranged"
+              value={formatSigned(model.combat.rangedAttack)}
+              detail={`Damage ${model.combat.rangedDamage}`}
+            />
           </article>
 
           <article className="state-panel panel-frame">
             <div>
-              <span className="eyebrow">Stored State</span>
+              <span className="eyebrow">Overview State</span>
               <div className="state-grid">
                 <MetricCard
                   icon="spark"
                   label="Inspiration"
                   value={`${model.resources.inspiration}`}
-                  detail={`Temp ${model.resources.temporaryInspiration}`}
+                />
+                <MetricCard
+                  icon="flame"
+                  label="Temp Insp."
+                  value={`${model.resources.temporaryInspiration}`}
+                />
+                <MetricCard
+                  icon="spark"
+                  label="Karma"
+                  value={`+${model.resources.positiveKarma} / -${model.resources.negativeKarma}`}
                 />
                 <MetricCard
                   icon="coin"
