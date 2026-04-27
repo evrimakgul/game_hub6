@@ -1,13 +1,15 @@
 # New Thread Context
 
-## Current Handoff Snapshot (2026-04-26)
+## Current Handoff Snapshot (2026-04-27)
 
 - Workspace is `C:\Users\Evrim\Desktop\FRP\Convergence\game_hub6` on `main`.
 - The old visual UI has been removed: route pages, presentation components, UI hooks, navigation wiring, and old CSS screens are gone.
-- React/Vite/CSS remain only as a minimal future UI shell in `src/App.tsx`, `src/main.tsx`, and `src/app.css`.
+- React/Vite/CSS now host the first rebuilt player character sheet surface in `src/App.tsx`, `src/app.css`, `src/ui/CharacterSheet.tsx`, and `src/ui/characterSheetModel.ts`.
+- The accepted character-sheet structure is implemented: always-visible top core state, summary-only middle dashboard, and bottom icon-tab detail workspace.
+- Bottom detail tabs are `Stats`, `Skills`, `Powers`, `Loadout`, `Inventory`, `Knowledge`, `History`, and `Notes`; summary cards for `Stats`, `Skills`, `Powers`, and `Loadout` switch the matching detail tab.
 - Core mechanics/data remain in `src/config`, `src/engine`, `src/lib`, `src/mutations`, `src/powers`, `src/rules`, `src/selectors`, `src/services`, and `src/types`.
 - Future UI work should start from `src/services/appDataController.ts`, `src/services/appDataPersistence.ts`, `src/services/onlineSessionService.ts`, `src/lib/realtimeSessionRepository.ts`, and pure selectors.
-- `VIEW-PERSONALIZATION-01` is superseded by `NEW-UI-DESIGN-01`; new UI design is deferred until after this service/core cleanup is validated.
+- `VIEW-PERSONALIZATION-01` is superseded by `NEW-UI-DESIGN-01`; DM dashboard design remains deferred.
 
 Use this file as the startup prompt/context for the next thread.
 

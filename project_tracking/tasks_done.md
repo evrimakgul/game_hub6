@@ -57,3 +57,4 @@
 - `COMBAT-PLAYER-01` Added player-side combat mode with masked initiative/party/activity views, AE-based opponent reveal, player navigation hooks, and local active-encounter persistence shared with the DM combat runtime.
 - `UI-RESET-01` Removed the old visual route/component/hook/style layer while preserving mechanics, data, persistence, and a minimal React/Vite/CSS shell for future UI work.
 - `APP-SERVICE-01` Added pure app/session service boundaries through `AppDataController`, `appDataPersistence`, and `OnlineSessionService`.
+- `CHAR-SHEET-TABS-01` Added the first rebuilt player character sheet UI with a fixed core-state top section, summary-only middle dashboard, bottom icon-tab detail workspace, UI-local tab state, and model/config tests.

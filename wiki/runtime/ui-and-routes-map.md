@@ -3,17 +3,19 @@ title: UI Reset And Future Interface Boundary
 topic: runtime
 kind: architecture
 status: active
-updated: 2026-04-26
+updated: 2026-04-27
 confidence: high
 ---
 
 ## Summary
 
-The previous route/component UI has been removed. The repo now keeps a minimal React/Vite/CSS shell only as a future interface entrypoint, while mechanics, data, persistence, and live-session access are exposed through pure TypeScript services.
+The previous route/component UI has been removed. The first rebuilt surface is now a compact player character sheet in React/Vite/CSS, while mechanics, data, persistence, and live-session access remain exposed through pure TypeScript services.
 
 ## Current State
 
-- `src/App.tsx` is a placeholder shell, not the game UI.
+- `src/App.tsx` now hosts the rebuilt player character sheet surface, or an empty-state create-character entrypoint when local storage has no player character.
+- `src/ui/CharacterSheet.tsx` renders the new three-section player sheet: always-visible core state, summary-only middle cards, and bottom icon-tab detail workspace.
+- `src/ui/characterSheetModel.ts` maps controller snapshots into UI-local character-sheet display models and tab/icon config.
 - Old route pages, presentation components, UI hooks, route navigation, and screen CSS were removed.
 - `src/services/appDataController.ts` is the future UI-facing app data controller for characters, items, auctions, knowledge, authoring content, world casts, Artifact Appraisal, and active encounters.
 - `src/services/appDataPersistence.ts` owns local storage hydration, serialization, starter data backfill, and backup recovery.
@@ -23,20 +25,23 @@ The previous route/component UI has been removed. The repo now keeps a minimal R
 
 ## Intended Direction
 
-- Design the new UI last, after the core cleanup is stable.
+- Continue rebuilding UI surfaces incrementally on top of the service layer.
 - Future UI may be Figma-driven, Build Web Apps-driven, or hand-tuned in React/Vite/CSS.
 - New screens should call services/selectors instead of recreating the removed React context/router coupling.
 - Hidden information rules, item knowledge visibility, player/DM data separation, and combat masking must remain enforced by core logic, not by visual-only assumptions.
+- DM dashboard design remains deferred.
 
 ## Key Decisions
 
 - Removing visual UI does not mean removing app behavior.
 - React and Vite stay available for the next UI, but no old route/component hierarchy is authoritative.
-- The new UI should be designed from current service boundaries instead of restoring the deleted pages.
+- The character sheet uses UI-local tab state only; visual tab selection is not persisted into character data.
+- The bottom detail workspace tabs are `Stats`, `Skills`, `Powers`, `Loadout`, `Inventory`, `Knowledge`, `History`, and `Notes`.
+- Middle summary cards act as shortcuts into matching bottom detail tabs instead of expanding in place.
 
 ## Deferred / Open
 
-- New player and DM interface design.
+- DM interface design.
 - Rebuilding navigation and screen flows against the pure service layer.
 - Revalidating visual hidden-information boundaries once the new UI exists.
 
@@ -44,6 +49,8 @@ The previous route/component UI has been removed. The repo now keeps a minimal R
 
 - [src/App.tsx](../../src/App.tsx)
 - [src/main.tsx](../../src/main.tsx)
+- [src/ui/CharacterSheet.tsx](../../src/ui/CharacterSheet.tsx)
+- [src/ui/characterSheetModel.ts](../../src/ui/characterSheetModel.ts)
 - [src/services/appDataController.ts](../../src/services/appDataController.ts)
 - [src/services/appDataPersistence.ts](../../src/services/appDataPersistence.ts)
 - [src/services/onlineSessionService.ts](../../src/services/onlineSessionService.ts)

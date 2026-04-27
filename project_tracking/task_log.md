@@ -1,5 +1,14 @@
 # Task Log
 
+## 2026-04-27
+
+- `CHAR-SHEET-TABS-01` completed.
+  - Added the first rebuilt React/Vite player character sheet on top of `AppDataController` and `buildPlayerCharacterViewModel`.
+  - Implemented the accepted three-section layout: always-visible core state, summary-only middle cards, and bottom icon-tab detail workspace.
+  - Summary cards for `Stats`, `Skills`, `Powers`, and `Loadout` switch the matching bottom tab; tab state stays UI-local.
+  - Added UI model/config tests and browser-checked desktop `1300 x 975` plus mobile layout behavior.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
 ## 2026-04-26
 
 - `UI-RESET-01` completed.

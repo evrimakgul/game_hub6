@@ -522,6 +522,24 @@ This roadmap is the active implementation source of truth for this branch.
 - Future UI may be Figma-driven, Build Web Apps-driven, or hand-tuned directly in React/Vite/CSS.
 - Future UI should call the pure services instead of restoring the old React context/router layer.
 
+## Completed Follow-Up: Character Sheet Tab Framework V1
+
+### 14.1 Rebuilt Player Character Sheet Surface
+- Added a new React/Vite character sheet UI backed by `AppDataController` and `buildPlayerCharacterViewModel`.
+- Kept the new UI layer separate from mechanics/data services and did not restore the deleted route/component hierarchy.
+- Empty local state now offers an explicit `Create Player Character` entrypoint into the sheet.
+
+### 14.2 Accepted Three-Section Layout
+- Top section keeps identity, XP/rank/CR, HP, mana, inspiration, money, status, and key combat readiness always visible.
+- Middle section is summary-only for `Combat Summary`, `Stats`, `Skills`, `Powers`, and `Loadout`.
+- Bottom section is the full detail workspace with icon tabs for `Stats`, `Skills`, `Powers`, `Loadout`, `Inventory`, `Knowledge`, `History`, and `Notes`.
+- Summary cards for `Stats`, `Skills`, `Powers`, and `Loadout` switch the matching bottom detail tab instead of expanding in place.
+
+### 14.3 UI Model And Icons
+- Added UI-local tab/config types and a UI-only icon map for tabs, stat groups, powers, equipment slots, and item/category display.
+- Tab selection is local React state and is not persisted into character data.
+- Item visibility uses existing item-card ownership checks before showing bonus details.
+
 ## Validation
 - After each meaningful task group run:
   - `npm run typecheck`

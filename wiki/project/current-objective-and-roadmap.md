@@ -3,13 +3,13 @@ title: Current Objective And Roadmap
 topic: project
 kind: roadmap
 status: active
-updated: 2026-04-26
+updated: 2026-04-27
 confidence: high
 ---
 
 ## Summary
 
-The current branch objective has shifted to a UI reset. The old visual route/component layer is removed, core mechanics/data remain intact, and the next major product step is a new UI design built on the extracted service layer.
+The current branch objective has shifted from UI reset into new UI rebuild. The old visual route/component layer is removed, core mechanics/data remain intact, and the first rebuilt surface is a compact player character sheet built on the extracted service layer.
 
 ## Current State
 
@@ -24,7 +24,8 @@ The current branch objective has shifted to a UI reset. The old visual route/com
 - `REALTIME-SESSION-01` is now complete: optional Supabase Auth/session wiring now backs `/dm/screen` and `/player/session` with persistent events, secret rolls, limited sharing, card sharing, and reward packets.
 - `UI-RESET-01` is now complete: old route pages, presentation components, UI hooks, navigation wiring, and screen CSS are removed.
 - Core app behavior now has pure TypeScript service entrypoints through `AppDataController`, app data persistence helpers, and `OnlineSessionService`.
-- New UI design is deferred until after cleanup and may use Figma, Build Web Apps, or hand-tuned React/Vite/CSS.
+- `CHAR-SHEET-TABS-01` is now complete: the new player character sheet uses an always-visible core-state top section, summary-only middle dashboard, and bottom icon-tab detail workspace.
+- New UI design may use Figma, Build Web Apps, or hand-tuned React/Vite/CSS; DM dashboard design remains deferred.
 - `COMBAT-ACT-01` is now intentionally parked at the very end of the project and may be skipped entirely unless priorities change.
 - Recent completed milestone groups include:
   - cast UI standardization
@@ -43,7 +44,7 @@ The current branch objective has shifted to a UI reset. The old visual route/com
 - Treat full portal-run automation as later follow-up work, not as part of the just-completed authoring workshop pass.
 - Treat the wiki as the place that reconciles roadmap intent against current implementation facts.
 - Keep future work disciplined around explicit open items rather than restarting already-closed architecture debates.
-- Treat the next UI as a fresh design on top of core services, not a restoration of deleted routes/components.
+- Treat each new UI surface as fresh design on top of core services, not a restoration of deleted routes/components.
 
 ## Key Decisions
 
@@ -63,6 +64,7 @@ The current branch objective has shifted to a UI reset. The old visual route/com
 - Supabase RLS policy verification against a real local/project Supabase environment
 - email/display-name lookup for adding campaign members instead of user UUID entry
 - new player/DM UI design and navigation flows on top of the core service layer
+- DM dashboard tab framework and operational layout
 - `COMBAT-ACT-01` timing and action-economy layer, explicitly deferred to the end and possibly out of scope.
 - `PORTAL-RUNNER-01` full portal-run state, boss-clear reward automation, exit unlocking, and persistent run orchestration.
 - `REPO-CLEANUP-01` remove temporary `python.ipynb` as the literal last cleanup step.

@@ -181,3 +181,10 @@
 - Updated: `runtime/state-and-persistence`
 - Updated: `runtime/ui-and-routes-map`
 - Updated: `history/split-decisions`
+
+## [2026-04-27] refresh | character sheet tab framework
+- Reconciled the roadmap, tracker, and wiki with the first rebuilt React/Vite player character sheet surface.
+- Recorded the accepted top core state, middle summary dashboard, and bottom icon-tab detail workspace.
+- Updated: `wiki/index.md`
+- Updated: `project/current-objective-and-roadmap`
+- Updated: `runtime/ui-and-routes-map`

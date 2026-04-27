@@ -1,9 +1,9 @@
 # Tasks TODO
 ## Active
-- `NEW-UI-DESIGN-01` planned later. Design a new player/DM UI on top of the pure service layer after the UI reset is stable. Figma, Build Web Apps, and hand-tuned React/Vite/CSS are all acceptable implementation paths.
+- `NEW-UI-DESIGN-01` active. Rebuild player/DM UI on top of the pure service layer. Figma, Build Web Apps, and hand-tuned React/Vite/CSS are all acceptable implementation paths.
 
 ### Group 15: New UI Design
-- `NEW-UI-DESIGN-01A` Design direction: choose visual direction, information architecture, and navigation model for player and DM workflows.
+- `NEW-UI-DESIGN-01A` partially complete. Player character-sheet visual direction and tab framework are implemented; DM dashboard direction remains to be designed later.
 - `NEW-UI-DESIGN-01B` Core integration: connect screens to `AppDataController`, `OnlineSessionService`, persistence helpers, realtime repositories, and pure selectors.
 - `NEW-UI-DESIGN-01C` Guardrails: preserve hidden combat identity, hidden item bonuses, hidden knowledge, and player/DM data separation in the new UI.
 - `NEW-UI-DESIGN-01D` Browser verification: run the rebuilt UI through desktop/mobile visual checks and core workflow checks before declaring it complete.
@@ -56,6 +56,7 @@
 ### Group 14: UI Reset And Service Boundary
 - `UI-RESET-01` completed. Removed the old visual route/component/hook/style layer while keeping a minimal React/Vite/CSS shell for future UI work.
 - `APP-SERVICE-01` completed. Replaced React app-flow/session providers with pure TypeScript services: `AppDataController`, app data persistence helpers, and `OnlineSessionService`.
+- `CHAR-SHEET-TABS-01` completed. Added the first rebuilt player character sheet UI with always-visible core state, summary-only middle cards, bottom icon tabs, UI-local tab state, and a tested character-sheet UI model.
 - `VIEW-PERSONALIZATION-01` superseded. Personalization may return inside the future UI design, but it is no longer the active next implementation item.
 
 ## Blocked / Deferred

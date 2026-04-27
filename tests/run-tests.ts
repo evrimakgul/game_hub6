@@ -3,6 +3,7 @@ import { runAppDataControllerTests } from "./appDataController.test.ts";
 import { runAuthoringTests } from "./authoring.test.ts";
 import { runAuctionHouseTests } from "./auctionHouse.test.ts";
 import { runCharacterRuntimeTests } from "./characterRuntime.test.ts";
+import { runCharacterSheetModelTests } from "./characterSheetModel.test.ts";
 import { runCombatEncounterCastingTests } from "./combatEncounterCasting.test.ts";
 import { runCombatEncounterPhysicalAttackTests } from "./combatEncounterPhysicalAttacks.test.ts";
 import { runCombatEncounterSpecialActionTests } from "./combatEncounterSpecialActions.test.ts";
@@ -31,6 +32,7 @@ async function main(): Promise<void> {
   await runKnowledgeTests();
   await runAppDataPersistenceTests();
   await runAppDataControllerTests();
+  await runCharacterSheetModelTests();
   await runCharacterRuntimeTests();
   await runCombatResolutionTests();
   await runCombatEncounterTests();
