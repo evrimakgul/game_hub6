@@ -1,5 +1,9 @@
 # Wiki Log
 
+## [2026-04-27] refresh | character sheet holistic completion
+- Reconciled the UI runtime map with the completed character-sheet pass: resistance summary replaces duplicate combat summary stats, detail workspace tabs are top-aligned, and resistance rows remain UI projections over existing mechanics.
+- Updated: `runtime/ui-and-routes-map`
+
 ## [2026-04-15] ingest | game_hub5 llm wiki bootstrap
 - Captured repo docs, tracking docs, current code landmarks, seven Codex threads, two ChatGPT share threads, one ChatGPT follow-up supplement, and external workflow references into `raw/`.
 - Updated: `project/game-hub5-overview`

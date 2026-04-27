@@ -8,6 +8,7 @@ import {
   type CharacterSheetDetailTabId,
   type CharacterSheetIconId,
   type CharacterSheetItemRow,
+  type CharacterSheetResistanceRow,
   type CharacterSheetUiModel,
 } from "./characterSheetModel.ts";
 
@@ -200,40 +201,216 @@ function ItemLine({ item }: { item: CharacterSheetItemRow }) {
         <strong>{item.name}</strong>
         <small>{item.blueprintLabel}</small>
       </span>
-      <em>{item.isKnown ? "Known" : "Concealed"}</em>
+      <em className={item.isKnown ? "known" : "concealed"}>
+        {item.isKnown ? "Known" : "Concealed"}
+      </em>
+    </div>
+  );
+}
+
+function ResistanceChip({
+  row,
+  compact = false,
+}: {
+  row: CharacterSheetResistanceRow;
+  compact?: boolean;
+}) {
+  return (
+    <div className={`resistance-chip resistance-${row.state} ${compact ? "compact" : ""}`}>
+      <span>{row.label}</span>
+      <strong>{row.levelLabel}</strong>
+      <small>
+        {row.multiplierLabel}
+        {row.modifier !== 0 ? ` / ${formatSigned(row.modifier)}` : ""}
+      </small>
     </div>
   );
 }
 
 function renderStatsDetail(model: CharacterSheetUiModel) {
   return (
-    <div className="stat-detail-grid">
-      {model.statGroups.map((group) => (
-        <section className="detail-card" key={group.title}>
-          <h3>
-            <SheetIcon icon={group.icon} />
-            {group.title}
-          </h3>
-          <div className="stat-table">
-            <span>Stat</span>
-            <span>Base</span>
-            <span>Gear</span>
-            <span>Buffs</span>
-            <span>Total</span>
-            {group.stats.map((stat) => (
-              <div className="stat-row" key={stat.id}>
-                <strong>{stat.id}</strong>
-                <span>{stat.base}</span>
-                <span>{formatSigned(stat.gear)}</span>
-                <span>{formatSigned(stat.buffs)}</span>
-                <strong>{stat.value}</strong>
-              </div>
-            ))}
-          </div>
-        </section>
+    <>
+      <div className="stat-detail-grid">
+        {model.statGroups.map((group) => (
+          <section className="detail-card" key={group.title}>
+            <h3>
+              <SheetIcon icon={group.icon} />
+              {group.title}
+            </h3>
+            <div className="stat-table">
+              <span>Stat</span>
+              <span>Base</span>
+              <span>Gear</span>
+              <span>Buffs</span>
+              <span>Total</span>
+              {group.stats.map((stat) => (
+                <div className="stat-row" key={stat.id}>
+                  <strong>{stat.id}</strong>
+                  <span>{stat.base}</span>
+                  <span>{formatSigned(stat.gear)}</span>
+                  <span>{formatSigned(stat.buffs)}</span>
+                  <strong>{stat.value}</strong>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+      <section className="detail-card resistance-detail-card">
+        <h3>
+          <SheetIcon icon="shield" />
+          Resistances
+        </h3>
+        <div className="resistance-detail-grid">
+          {model.resistanceRows.map((row) => (
+            <ResistanceChip key={row.id} row={row} />
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function getSummaryButtonClass(
+  targetTabId: CharacterSheetDetailTabId,
+  activeTabId: CharacterSheetDetailTabId
+): string {
+  return `summary-card panel-frame summary-button${
+    activeTabId === targetTabId ? " summary-active" : ""
+  }`;
+}
+
+function renderResistanceSummary(model: CharacterSheetUiModel) {
+  if (model.highlightedResistanceRows.length === 0) {
+    return (
+      <div className="resistance-summary-list">
+        <ResistanceChip row={model.resistanceRows.find((row) => row.id === "physical")!} compact />
+        <p className="empty-list">All other damage types are normal.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="resistance-summary-list">
+      {model.highlightedResistanceRows.slice(0, 5).map((row) => (
+        <ResistanceChip compact key={row.id} row={row} />
       ))}
+      {model.highlightedResistanceRows.length > 5 ? (
+        <p className="empty-list">+{model.highlightedResistanceRows.length - 5} more</p>
+      ) : null}
     </div>
   );
+}
+
+function renderSummaryCard(
+  model: CharacterSheetUiModel,
+  activeTabId: CharacterSheetDetailTabId,
+  setActiveTabId: (tabId: CharacterSheetDetailTabId) => void,
+  summaryId: string
+) {
+  switch (summaryId) {
+    case "resistances":
+      return (
+        <button
+          className={getSummaryButtonClass("stats", activeTabId)}
+          key="resistances"
+          onClick={() => setActiveTabId("stats")}
+          type="button"
+        >
+          <header>
+            <SheetIcon icon="shield" />
+            <h2>Resistances</h2>
+          </header>
+          {renderResistanceSummary(model)}
+        </button>
+      );
+    case "stats":
+      return (
+        <button
+          className={getSummaryButtonClass("stats", activeTabId)}
+          key="stats"
+          type="button"
+          onClick={() => setActiveTabId("stats")}
+        >
+          <header>
+            <SheetIcon icon="stats" />
+            <h2>Stats</h2>
+          </header>
+          {model.statGroups.map((group) => (
+            <div className="summary-row" key={group.title}>
+              <span>{group.title}</span>
+              <strong>{group.stats.map((stat) => `${stat.id} ${stat.value}`).join(" / ")}</strong>
+            </div>
+          ))}
+        </button>
+      );
+    case "skills":
+      return (
+        <button
+          className={getSummaryButtonClass("skills", activeTabId)}
+          key="skills"
+          type="button"
+          onClick={() => setActiveTabId("skills")}
+        >
+          <header>
+            <SheetIcon icon="skill" />
+            <h2>Skills</h2>
+          </header>
+          {model.topSkills.slice(0, 5).map((skill) => (
+            <div className="summary-row" key={skill.id}>
+              <span>{skill.label}</span>
+              <strong>{formatSigned(skill.total)}</strong>
+            </div>
+          ))}
+        </button>
+      );
+    case "powers":
+      return (
+        <button
+          className={getSummaryButtonClass("powers", activeTabId)}
+          key="powers"
+          type="button"
+          onClick={() => setActiveTabId("powers")}
+        >
+          <header>
+            <SheetIcon icon="power" />
+            <h2>Powers</h2>
+          </header>
+          {model.powers.length > 0 ? (
+            model.powers.slice(0, 5).map((power) => (
+              <div className="summary-row" key={power.id}>
+                <span>{power.name}</span>
+                <strong>Lv {power.level}</strong>
+              </div>
+            ))
+          ) : (
+            <EmptyList label="No powers." />
+          )}
+        </button>
+      );
+    case "loadout":
+      return (
+        <button
+          className={getSummaryButtonClass("loadout", activeTabId)}
+          key="loadout"
+          type="button"
+          onClick={() => setActiveTabId("loadout")}
+        >
+          <header>
+            <SheetIcon icon="loadout" />
+            <h2>Loadout</h2>
+          </header>
+          {model.loadoutSlots.slice(0, 5).map((slot) => (
+            <div className="summary-row" key={slot.slotId}>
+              <span>{slot.label}</span>
+              <strong>{slot.item?.name ?? "Open"}</strong>
+            </div>
+          ))}
+        </button>
+      );
+    default:
+      return null;
+  }
 }
 
 function renderSkillsDetail(model: CharacterSheetUiModel) {
@@ -284,10 +461,14 @@ function renderLoadoutDetail(model: CharacterSheetUiModel) {
   return (
     <div className="loadout-grid">
       {model.loadoutSlots.map((slot) => (
-        <section className="detail-card loadout-slot" key={slot.slotId}>
+        <section
+          className={`detail-card loadout-slot ${slot.item ? "equipped" : "open"}`}
+          key={slot.slotId}
+        >
           <h3>
             <SheetIcon icon={slot.icon} />
             {slot.label}
+            <span className="slot-state">{slot.item ? "Equipped" : "Open"}</span>
           </h3>
           {slot.item ? (
             <>
@@ -508,101 +689,30 @@ export function CharacterSheet({ snapshot, character }: CharacterSheetProps) {
                 />
               </div>
             </div>
-            <div className="status-strip">
-              {statusItems.length > 0 ? (
-                statusItems.map((item) => <span key={item}>{item}</span>)
-              ) : (
-                <span>Ready</span>
-              )}
+            <div className="mode-strip" aria-label="View and edit mode">
+              {model.modeIndicators.map((indicator) => (
+                <span className={`mode-pill ${indicator.tone}`} key={indicator.id}>
+                  {indicator.label}
+                </span>
+              ))}
+            </div>
+            <div className="status-line">
+              <span className="eyebrow">Status / Effects</span>
+              <div className="status-strip">
+                {statusItems.length > 0 ? (
+                  statusItems.map((item) => <span key={item}>{item}</span>)
+                ) : (
+                  <span>Ready</span>
+                )}
+              </div>
             </div>
           </article>
         </section>
 
         <section className="summary-grid" aria-label="Character summaries">
-          <article className="summary-card panel-frame summary-card-static">
-            <header>
-              <SheetIcon icon="sword" />
-              <h2>Combat Summary</h2>
-            </header>
-            <div className="combat-summary-grid">
-              <MetricCard icon="sword" label="Melee" value={formatSigned(model.combat.meleeAttack)} />
-              <MetricCard icon="target" label="Ranged" value={formatSigned(model.combat.rangedAttack)} />
-              <MetricCard icon="shield" label="Soak" value={`${model.combat.soak}`} />
-              <MetricCard icon="walk" label="Move" value={model.combat.movement} />
-            </div>
-          </article>
-
-          <button
-            className="summary-card panel-frame summary-button"
-            type="button"
-            onClick={() => setActiveTabId("stats")}
-          >
-            <header>
-              <SheetIcon icon="stats" />
-              <h2>Stats</h2>
-            </header>
-            {model.statGroups.map((group) => (
-              <div className="summary-row" key={group.title}>
-                <span>{group.title}</span>
-                <strong>{group.stats.map((stat) => `${stat.id} ${stat.value}`).join(" / ")}</strong>
-              </div>
-            ))}
-          </button>
-
-          <button
-            className="summary-card panel-frame summary-button"
-            type="button"
-            onClick={() => setActiveTabId("skills")}
-          >
-            <header>
-              <SheetIcon icon="skill" />
-              <h2>Skills</h2>
-            </header>
-            {model.topSkills.slice(0, 5).map((skill) => (
-              <div className="summary-row" key={skill.id}>
-                <span>{skill.label}</span>
-                <strong>{formatSigned(skill.total)}</strong>
-              </div>
-            ))}
-          </button>
-
-          <button
-            className="summary-card panel-frame summary-button"
-            type="button"
-            onClick={() => setActiveTabId("powers")}
-          >
-            <header>
-              <SheetIcon icon="power" />
-              <h2>Powers</h2>
-            </header>
-            {model.powers.length > 0 ? (
-              model.powers.slice(0, 5).map((power) => (
-                <div className="summary-row" key={power.id}>
-                  <span>{power.name}</span>
-                  <strong>Lv {power.level}</strong>
-                </div>
-              ))
-            ) : (
-              <EmptyList label="No powers." />
-            )}
-          </button>
-
-          <button
-            className="summary-card panel-frame summary-button"
-            type="button"
-            onClick={() => setActiveTabId("loadout")}
-          >
-            <header>
-              <SheetIcon icon="loadout" />
-              <h2>Loadout</h2>
-            </header>
-            {model.loadoutSlots.slice(0, 5).map((slot) => (
-              <div className="summary-row" key={slot.slotId}>
-                <span>{slot.label}</span>
-                <strong>{slot.item?.name ?? "Open"}</strong>
-              </div>
-            ))}
-          </button>
+          {model.summarySections.map((section) =>
+            renderSummaryCard(model, activeTabId, setActiveTabId, section.id)
+          )}
         </section>
 
         <section className="detail-workspace panel-frame" aria-label="Character details">

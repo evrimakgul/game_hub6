@@ -22,7 +22,8 @@ This file tracks active reminders for the current implementation block.
 - Realtime DM/Player Session V1 is now complete.
 - The UI Reset and Service Boundary pass is now complete: the old route/component/hook/style layer is removed, React/Vite/CSS remain as a minimal future UI shell, and app/session behavior is exposed through pure TypeScript services.
 - `VIEW-PERSONALIZATION-01` is superseded by `NEW-UI-DESIGN-01`: future UI design should start from `AppDataController`, app data persistence helpers, `OnlineSessionService`, realtime repositories, and pure selectors.
-- Character Sheet Tab Framework V1 is now implemented: the first rebuilt React/Vite UI surface uses the accepted top core state, middle summary dashboard, and bottom icon-tab detail workspace.
+- Character Sheet Tab Framework V1 is now implemented: the first rebuilt React/Vite UI surface uses the accepted top core state, middle summary dashboard, and bottom top-tab detail workspace.
+- Character Sheet Holistic Completion Pass is complete: the middle dashboard now uses `Resistances` instead of duplicate combat summary stats, and the `Stats` detail tab shows the full resistance grid from existing mechanics.
 - The character sheet tab state is UI-local only, and data still flows through `AppDataController`, `buildPlayerCharacterViewModel`, and pure item/knowledge helpers.
 - Validation passed for the current pass: `npm run typecheck`, `npm test`, and `npm run build`.
 
@@ -107,7 +108,7 @@ This file tracks active reminders for the current implementation block.
 - Mob templates currently use a focused mob editor rather than the full player-sheet UI.
 - Portal progression/run-state automation is still manual; V1 exports one stage at a time into the existing combat dashboard instead of owning an end-to-end portal-run state machine.
 - Player combat mode has own-turn action controls, but full timing/action-budget enforcement remains deferred.
-- New UI design is partially implemented for the player character sheet. DM dashboard design remains unimplemented and tracked under `NEW-UI-DESIGN-01`.
+- New UI design is partially implemented for the player character sheet, with the compact three-section sheet now using top workspace tabs. DM dashboard design remains unimplemented and tracked under `NEW-UI-DESIGN-01`.
 - Supabase RLS policies are implemented in migration SQL, but still need manual verification against Supabase local/project roles.
 - DM campaign members are currently added by Supabase user UUID rather than by email lookup.
 - The DM Screen now lists only campaigns where the signed-in account has `campaign_members.role = 'dm'`; player session access remains membership-based so the same account can be a DM in one campaign and a player/member in another.

@@ -1,4 +1,8 @@
-import { getCurrentSkillValue } from "../config/characterRuntime.ts";
+import {
+  getCurrentSkillValue,
+  getResolvedResistanceLevel,
+  getResistanceModifierTotal,
+} from "../config/characterRuntime.ts";
 import { statGroups } from "../config/characterTemplate.ts";
 import {
   buildItemIndex,
@@ -10,6 +14,12 @@ import {
 } from "../lib/items.ts";
 import { buildPlayerCharacterViewModel } from "../selectors/playerCharacterViewModel.ts";
 import type { AppDataSnapshot } from "../services/appDataController.ts";
+import {
+  DAMAGE_TYPES,
+  RESISTANCE_LEVELS,
+  type DamageTypeId,
+  type ResistanceLevel,
+} from "../rules/resistances.ts";
 import type { CharacterRecord, StatId } from "../types/character.ts";
 import {
   CANONICAL_EQUIPMENT_SLOT_IDS,
@@ -29,7 +39,7 @@ export type CharacterSheetDetailTabId =
   | "notes";
 
 export type CharacterSheetSummarySectionId =
-  | "combat"
+  | "resistances"
   | "stats"
   | "skills"
   | "powers"
@@ -82,7 +92,7 @@ export const CHARACTER_SHEET_DETAIL_TABS: CharacterSheetTabConfig[] = [
 ];
 
 export const CHARACTER_SHEET_SUMMARY_SECTIONS: CharacterSheetSummaryConfig[] = [
-  { id: "combat", label: "Combat Summary", icon: "sword", targetTabId: null },
+  { id: "resistances", label: "Resistances", icon: "shield", targetTabId: "stats" },
   { id: "stats", label: "Stats", icon: "stats", targetTabId: "stats" },
   { id: "skills", label: "Skills", icon: "skill", targetTabId: "skills" },
   { id: "powers", label: "Powers", icon: "power", targetTabId: "powers" },
@@ -159,6 +169,31 @@ export type CharacterSheetLoadoutSlot = {
   isSupplementary: boolean;
 };
 
+export type CharacterSheetResistanceState =
+  | "fragile"
+  | "vulnerable"
+  | "normal"
+  | "resist"
+  | "immune";
+
+export type CharacterSheetResistanceRow = {
+  id: DamageTypeId;
+  label: string;
+  family: string;
+  baseLevel: ResistanceLevel;
+  modifier: number;
+  resolvedLevel: ResistanceLevel;
+  levelLabel: string;
+  multiplierLabel: string;
+  state: CharacterSheetResistanceState;
+};
+
+export type CharacterSheetModeIndicator = {
+  id: string;
+  label: string;
+  tone: "neutral" | "active" | "caution";
+};
+
 export type CharacterSheetKnowledgeRow = {
   id: string;
   type: string;
@@ -219,6 +254,9 @@ export type CharacterSheetUiModel = {
     effects: string[];
     utilityTraits: string[];
   };
+  modeIndicators: CharacterSheetModeIndicator[];
+  resistanceRows: CharacterSheetResistanceRow[];
+  highlightedResistanceRows: CharacterSheetResistanceRow[];
   statGroups: CharacterSheetStatGroup[];
   skills: CharacterSheetSkillRow[];
   topSkills: CharacterSheetSkillRow[];
@@ -240,6 +278,21 @@ function sumValues(values: Array<{ value: number }>): number {
 
 function formatCharacterName(character: CharacterRecord): string {
   return character.sheet.name.trim().length > 0 ? character.sheet.name : "Unnamed Character";
+}
+
+function getResistanceState(level: ResistanceLevel): CharacterSheetResistanceState {
+  switch (level) {
+    case -2:
+      return "fragile";
+    case -1:
+      return "vulnerable";
+    case 1:
+      return "resist";
+    case 2:
+      return "immune";
+    case 0:
+      return "normal";
+  }
 }
 
 function getItemIcon(item: SharedItemRecord | null): CharacterSheetIconId {
@@ -342,6 +395,27 @@ export function buildCharacterSheetUiModel(
     }),
   }));
 
+  const resistanceRows: CharacterSheetResistanceRow[] = DAMAGE_TYPES.map((damageType) => {
+    const baseLevel = sheet.resistances[damageType.id] ?? 0;
+    const modifier = getResistanceModifierTotal(sheet, damageType.id, itemsById);
+    const resolvedLevel = getResolvedResistanceLevel(sheet, damageType.id, itemsById);
+    const rule = RESISTANCE_LEVELS[resolvedLevel];
+    return {
+      id: damageType.id,
+      label: damageType.label,
+      family: damageType.family,
+      baseLevel,
+      modifier,
+      resolvedLevel,
+      levelLabel: rule.label,
+      multiplierLabel: `x${rule.damageMultiplier}`,
+      state: getResistanceState(resolvedLevel),
+    };
+  });
+  const highlightedResistanceRows = resistanceRows
+    .filter((row) => row.resolvedLevel !== 0)
+    .sort((left, right) => Math.abs(right.resolvedLevel) - Math.abs(left.resolvedLevel));
+
   const skills = sheet.skills.map((skill) => ({
     id: skill.id,
     label: skill.label,
@@ -439,9 +513,36 @@ export function buildCharacterSheetUiModel(
     },
     status: {
       tags: sheet.statusTags.map((tag) => tag.label),
-      effects: sheet.effects,
+      effects: [
+        ...sheet.effects,
+        ...derived.activePowerEffects.map((effect) => effect.label),
+      ],
       utilityTraits: derived.utilityTraits,
     },
+    modeIndicators: [
+      {
+        id: "viewer",
+        label: `${snapshot.roleChoice === "dm" ? "DM" : "Player"} View`,
+        tone: snapshot.roleChoice === "dm" ? "active" : "neutral",
+      },
+      {
+        id: "owner",
+        label: character.ownerRole === "dm" ? "DM Character" : "Player Character",
+        tone: character.ownerRole === "dm" ? "active" : "neutral",
+      },
+      { id: "edit", label: "View Only", tone: "neutral" },
+      {
+        id: "admin",
+        label: sheet.dmAuditLog.some((entry) => entry.editLayer === "admin_override")
+          ? "Admin Audit"
+          : "Admin Locked",
+        tone: sheet.dmAuditLog.some((entry) => entry.editLayer === "admin_override")
+          ? "caution"
+          : "neutral",
+      },
+    ],
+    resistanceRows,
+    highlightedResistanceRows,
     statGroups: statGroupRows,
     skills,
     topSkills,

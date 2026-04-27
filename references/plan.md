@@ -530,15 +530,16 @@ This roadmap is the active implementation source of truth for this branch.
 - Empty local state now offers an explicit `Create Player Character` entrypoint into the sheet.
 
 ### 14.2 Accepted Three-Section Layout
-- Top section keeps identity, XP/rank/CR, HP, mana, inspiration, money, status, and key combat readiness always visible.
-- Middle section is summary-only for `Combat Summary`, `Stats`, `Skills`, `Powers`, and `Loadout`.
-- Bottom section is the full detail workspace with icon tabs for `Stats`, `Skills`, `Powers`, `Loadout`, `Inventory`, `Knowledge`, `History`, and `Notes`.
-- Summary cards for `Stats`, `Skills`, `Powers`, and `Loadout` switch the matching bottom detail tab instead of expanding in place.
+- Top section keeps identity, biographies, XP/rank/CR, HP, mana, inspiration, money, status/effects, mode indicators, and key combat readiness always visible.
+- Middle section is summary-only for `Resistances`, `Stats`, `Skills`, `Powers`, and `Loadout`.
+- Bottom section is the full detail workspace with top icon tabs for `Stats`, `Skills`, `Powers`, `Loadout`, `Inventory`, `Knowledge`, `History`, and `Notes`.
+- Summary cards switch the matching bottom detail tab instead of expanding in place; `Resistances` opens the `Stats` tab where the full resistance grid lives.
 
 ### 14.3 UI Model And Icons
 - Added UI-local tab/config types and a UI-only icon map for tabs, stat groups, powers, equipment slots, and item/category display.
 - Tab selection is local React state and is not persisted into character data.
 - Item visibility uses existing item-card ownership checks before showing bonus details.
+- Resistance rows are UI projections over existing resistance mechanics and item/power modifiers.
 
 ## Validation
 - After each meaningful task group run:

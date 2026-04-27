@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 
+import { createEmptyBonusProfile } from "../src/lib/items.ts";
 import { createAppDataController } from "../src/services/appDataController.ts";
 import {
   buildCharacterSheetUiModel,
@@ -27,16 +28,16 @@ export async function runCharacterSheetModelTests(): Promise<void> {
       },
     },
     {
-      name: "summary sections use detail tabs as shortcuts without making combat a tab",
+      name: "summary sections use resistances and detail tabs as shortcuts",
       run: () => {
         assert.deepEqual(
           CHARACTER_SHEET_SUMMARY_SECTIONS.map((section) => section.id),
-          ["combat", "stats", "skills", "powers", "loadout"]
+          ["resistances", "stats", "skills", "powers", "loadout"]
         );
         assert.equal(
-          CHARACTER_SHEET_SUMMARY_SECTIONS.find((section) => section.id === "combat")
+          CHARACTER_SHEET_SUMMARY_SECTIONS.find((section) => section.id === "resistances")
             ?.targetTabId,
-          null
+          "stats"
         );
         assert.equal(
           CHARACTER_SHEET_SUMMARY_SECTIONS.find((section) => section.id === "stats")
@@ -85,6 +86,110 @@ export async function runCharacterSheetModelTests(): Promise<void> {
         assert.ok(model.statGroups.some((group) => group.title === "Physical"));
         assert.ok(model.skills.length > 0);
         assert.ok(model.loadoutSlots.some((slot) => slot.slotId === "weapon_primary"));
+        assert.equal(model.resistanceRows.length, 11);
+        assert.ok(model.modeIndicators.some((indicator) => indicator.label === "View Only"));
+      },
+    },
+    {
+      name: "ui model resolves resistance rows from base, item, and power modifiers",
+      run: () => {
+        const controller = createAppDataController({ persistOnChange: false });
+        const characterId = controller.createCharacter("player");
+        const itemId = controller.createItem("weapon:one_handed", {
+          name: "Hidden Ward Blade",
+          bonusProfile: {
+            ...createEmptyBonusProfile(),
+            resistanceBonuses: { fire: 1 },
+          },
+        });
+        controller.assignItemToCharacter(itemId, characterId);
+        controller.updateCharacter(characterId, (sheet) => ({
+          ...sheet,
+          resistances: {
+            ...sheet.resistances,
+            fire: -1,
+            cold: 2,
+          },
+          activeItemIds: [itemId],
+          activePowerEffects: [
+            {
+              id: "effect-fire-ward",
+              stackKey: "effect-fire-ward",
+              effectKind: "direct",
+              powerId: "light_support",
+              powerName: "Light Support",
+              sourceLevel: 5,
+              casterCharacterId: characterId,
+              casterName: "Tab Runner",
+              targetCharacterId: characterId,
+              sourceEffectId: null,
+              shareMode: null,
+              sharedTargetCharacterIds: null,
+              label: "Fire Ward",
+              summary: "Raises fire resistance.",
+              actionType: null,
+              manaCost: null,
+              selectedStatId: null,
+              modifiers: [
+                {
+                  targetType: "resistance",
+                  targetId: "fire",
+                  value: 1,
+                  sourceLabel: "Fire Ward",
+                },
+              ],
+              appliedAt: "2026-04-27T00:00:00.000Z",
+            },
+          ],
+        }));
+
+        const snapshot = controller.getSnapshot();
+        const character = snapshot.activePlayerCharacter;
+        assert.ok(character);
+
+        const model = buildCharacterSheetUiModel(snapshot, character);
+        const fire = model.resistanceRows.find((row) => row.id === "fire");
+        const cold = model.resistanceRows.find((row) => row.id === "cold");
+
+        assert.equal(fire?.baseLevel, -1);
+        assert.equal(fire?.modifier, 2);
+        assert.equal(fire?.resolvedLevel, 1);
+        assert.equal(fire?.state, "resist");
+        assert.equal(cold?.state, "immune");
+        assert.deepEqual(
+          model.highlightedResistanceRows.map((row) => row.id).sort(),
+          ["cold", "fire"]
+        );
+        assert.ok(model.status.effects.includes("Fire Ward"));
+      },
+    },
+    {
+      name: "concealed inventory items do not expose hidden bonus details",
+      run: () => {
+        const controller = createAppDataController({ persistOnChange: false });
+        const characterId = controller.createCharacter("player");
+        const itemId = controller.createItem("weapon:one_handed", {
+          name: "Veiled Knife",
+          isArtifact: true,
+          bonusProfile: {
+            ...createEmptyBonusProfile(),
+            derivedBonuses: { melee_damage: 4 },
+          },
+        });
+        controller.assignItemToCharacter(itemId, characterId);
+
+        const snapshot = controller.getSnapshot();
+        const character = snapshot.activePlayerCharacter;
+        assert.ok(character);
+
+        const model = buildCharacterSheetUiModel(snapshot, character);
+        const item = model.inventoryItems.find((row) => row.id === itemId);
+
+        assert.ok(item);
+        assert.equal(item.isKnown, false);
+        assert.doesNotMatch(item.summary, /Bonus:/);
+        assert.doesNotMatch(item.summary, /Melee Damage/i);
+        assert.doesNotMatch(item.summary, /\+4/);
       },
     },
   ]);

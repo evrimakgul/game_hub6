@@ -14,8 +14,8 @@ The previous route/component UI has been removed. The first rebuilt surface is n
 ## Current State
 
 - `src/App.tsx` now hosts the rebuilt player character sheet surface, or an empty-state create-character entrypoint when local storage has no player character.
-- `src/ui/CharacterSheet.tsx` renders the new three-section player sheet: always-visible core state, summary-only middle cards, and bottom icon-tab detail workspace.
-- `src/ui/characterSheetModel.ts` maps controller snapshots into UI-local character-sheet display models and tab/icon config.
+- `src/ui/CharacterSheet.tsx` renders the new three-section player sheet: always-visible core state, summary-only middle cards, and a bottom detail workspace with top icon tabs.
+- `src/ui/characterSheetModel.ts` maps controller snapshots into UI-local character-sheet display models, tab/icon config, mode indicators, and resistance projections.
 - Old route pages, presentation components, UI hooks, route navigation, and screen CSS were removed.
 - `src/services/appDataController.ts` is the future UI-facing app data controller for characters, items, auctions, knowledge, authoring content, world casts, Artifact Appraisal, and active encounters.
 - `src/services/appDataPersistence.ts` owns local storage hydration, serialization, starter data backfill, and backup recovery.
@@ -38,6 +38,7 @@ The previous route/component UI has been removed. The first rebuilt surface is n
 - The character sheet uses UI-local tab state only; visual tab selection is not persisted into character data.
 - The bottom detail workspace tabs are `Stats`, `Skills`, `Powers`, `Loadout`, `Inventory`, `Knowledge`, `History`, and `Notes`.
 - Middle summary cards act as shortcuts into matching bottom detail tabs instead of expanding in place.
+- The middle dashboard uses `Resistances` instead of duplicating combat summary values; resistance details live in the `Stats` tab and are derived from existing resistance mechanics.
 
 ## Deferred / Open
 
