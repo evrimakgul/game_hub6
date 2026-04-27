@@ -170,3 +170,14 @@
 - Updated: `domains/knowledge-cards`
 - Updated: `domains/realtime-sessions`
 - Updated: `history/split-decisions`
+
+## [2026-04-26] refresh | ui reset and service boundary
+- Reconciled the wiki with the removal of the old visual route/component layer and the new pure TypeScript app/session service boundary.
+- Recorded that React/Vite/CSS remain only as a future UI shell, and that new player/DM UI design is deferred.
+- Updated: `wiki/index.md`
+- Updated: `project/game-hub5-overview`
+- Updated: `project/current-objective-and-roadmap`
+- Updated: `project/implemented-vs-deferred`
+- Updated: `runtime/state-and-persistence`
+- Updated: `runtime/ui-and-routes-map`
+- Updated: `history/split-decisions`

@@ -55,3 +55,5 @@
 - `AUCTION-HOUSE-01` Added a dedicated DM auction-house route with seeded workbook data, pasted-row import/replace support, filtering, detail review, and create/open item actions.
 - `AUCTION-PLAYER-01` Added player-side auction-house access from character sheets, completed bid/buyout shopping transactions, direct purchased-item assignment into character inventories, and live stock depletion rules.
 - `COMBAT-PLAYER-01` Added player-side combat mode with masked initiative/party/activity views, AE-based opponent reveal, player navigation hooks, and local active-encounter persistence shared with the DM combat runtime.
+- `UI-RESET-01` Removed the old visual route/component/hook/style layer while preserving mechanics, data, persistence, and a minimal React/Vite/CSS shell for future UI work.
+- `APP-SERVICE-01` Added pure app/session service boundaries through `AppDataController`, `appDataPersistence`, and `OnlineSessionService`.

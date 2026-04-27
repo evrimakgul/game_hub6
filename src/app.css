@@ -1,8 +1,24 @@
-@import "./styles/base.css";
-@import "./styles/layout.css";
-@import "./styles/pages/dm.css";
-@import "./styles/components/combat-encounter.css";
-@import "./styles/components/controls.css";
-@import "./styles/pages/player-character.css";
-@import "./styles/components/dice-popover.css";
-@import "./styles/responsive.css";
+:root {
+  color: #f5f7fb;
+  background: #111318;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+.dev-shell {
+  display: grid;
+  min-height: 100vh;
+  place-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.dev-shell h1,
+.dev-shell p {
+  margin: 0;
+}

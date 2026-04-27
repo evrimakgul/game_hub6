@@ -1,5 +1,20 @@
 # Task Log
 
+## 2026-04-26
+
+- `UI-RESET-01` completed.
+  - Removed the old visual UI implementation: routes, presentation components, UI hooks, navigation wiring, and current screen CSS.
+  - Kept React/Vite/CSS as a minimal future UI shell instead of deleting the frontend toolchain.
+- `APP-SERVICE-01` completed.
+  - Added `AppDataController` as the pure app-data service boundary for characters, items, auctions, knowledge, authoring records, world casts, Artifact Appraisal, and active encounters.
+  - Moved local persistence into `src/services/appDataPersistence.ts`.
+  - Replaced the React online-session provider with `OnlineSessionService` and made Supabase configuration explicit instead of tied to `import.meta.env`.
+  - Added focused service-boundary tests in `tests/appDataController.test.ts`.
+- `VIEW-PERSONALIZATION-01` superseded by `NEW-UI-DESIGN-01`.
+  - Future UI design is deferred until after the service/core cleanup.
+  - Future design may use Figma, Build Web Apps, or hand-tuned React/Vite/CSS.
+  - Validation: `npm run typecheck`, `npm test`, `npm run build`.
+
 ## 2026-04-24
 
 - `REALTIME-SESSION-01` completed.

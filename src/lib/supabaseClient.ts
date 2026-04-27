@@ -1,19 +1,44 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() ?? "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() ?? "";
+export type SupabaseClientConfig = {
+  url?: string;
+  anonKey?: string;
+};
 
-export const isSupabaseConfigured =
-  supabaseUrl.length > 0 && supabaseAnonKey.length > 0;
+function getProcessEnvValue(key: string): string {
+  return typeof process === "undefined" ? "" : (process.env[key]?.trim() ?? "");
+}
+
+export function getDefaultSupabaseConfig(): SupabaseClientConfig {
+  return {
+    url: getProcessEnvValue("VITE_SUPABASE_URL") || getProcessEnvValue("SUPABASE_URL"),
+    anonKey:
+      getProcessEnvValue("VITE_SUPABASE_ANON_KEY") ||
+      getProcessEnvValue("SUPABASE_ANON_KEY"),
+  };
+}
+
+export function isSupabaseConfigured(
+  config: SupabaseClientConfig = getDefaultSupabaseConfig()
+): boolean {
+  return Boolean(config.url?.trim() && config.anonKey?.trim());
+}
 
 let client: SupabaseClient | null = null;
+let clientKey = "";
 
-export function getSupabaseClient(): SupabaseClient | null {
-  if (!isSupabaseConfigured) {
+export function getSupabaseClient(
+  config: SupabaseClientConfig = getDefaultSupabaseConfig()
+): SupabaseClient | null {
+  const supabaseUrl = config.url?.trim() ?? "";
+  const supabaseAnonKey = config.anonKey?.trim() ?? "";
+
+  if (!isSupabaseConfigured({ url: supabaseUrl, anonKey: supabaseAnonKey })) {
     return null;
   }
 
-  if (!client) {
+  const nextClientKey = `${supabaseUrl}|${supabaseAnonKey}`;
+  if (!client || clientKey !== nextClientKey) {
     client = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
@@ -25,6 +50,7 @@ export function getSupabaseClient(): SupabaseClient | null {
         },
       },
     });
+    clientKey = nextClientKey;
   }
 
   return client;

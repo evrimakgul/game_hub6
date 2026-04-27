@@ -1,5 +1,14 @@
 # New Thread Context
 
+## Current Handoff Snapshot (2026-04-26)
+
+- Workspace is `C:\Users\Evrim\Desktop\FRP\Convergence\game_hub6` on `main`.
+- The old visual UI has been removed: route pages, presentation components, UI hooks, navigation wiring, and old CSS screens are gone.
+- React/Vite/CSS remain only as a minimal future UI shell in `src/App.tsx`, `src/main.tsx`, and `src/app.css`.
+- Core mechanics/data remain in `src/config`, `src/engine`, `src/lib`, `src/mutations`, `src/powers`, `src/rules`, `src/selectors`, `src/services`, and `src/types`.
+- Future UI work should start from `src/services/appDataController.ts`, `src/services/appDataPersistence.ts`, `src/services/onlineSessionService.ts`, `src/lib/realtimeSessionRepository.ts`, and pure selectors.
+- `VIEW-PERSONALIZATION-01` is superseded by `NEW-UI-DESIGN-01`; new UI design is deferred until after this service/core cleanup is validated.
+
 Use this file as the startup prompt/context for the next thread.
 
 ## How To Maintain This File

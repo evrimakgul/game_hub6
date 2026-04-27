@@ -1,14 +1,12 @@
 # Tasks TODO
 ## Active
-- `VIEW-PERSONALIZATION-01` planned next. Add personalized player/DM page design with safe manual controls first, then page layouts, presets, and automatic recommendations.
+- `NEW-UI-DESIGN-01` planned later. Design a new player/DM UI on top of the pure service layer after the UI reset is stable. Figma, Build Web Apps, and hand-tuned React/Vite/CSS are all acceptable implementation paths.
 
-### Group 14: Personalized View Design
-- `VIEW-PERSONALIZATION-01A` Foundation: define a persisted `ViewProfile` model for role/page/character scoped preferences, add schema versioning, defaults, reset behavior, and a CSS-variable contract for theme, density, font scale, panel style, spacing, and motion.
-- `VIEW-PERSONALIZATION-01B` Safe manual controls: add an Appearance/Layout drawer with live preview, save, reset, theme selection, density, font scale, section collapse, section pinning, allowed section hiding, and reorder controls.
-- `VIEW-PERSONALIZATION-01C` Page layout registry: create a per-page section registry with `required`, `optional`, `hideable`, `reorderable`, and `combatRequired` flags. Start with player character sheet, then extend to player combat, auction house, DM dashboard, and DM authoring pages.
-- `VIEW-PERSONALIZATION-01D` Presets: add role and page presets such as combat-focused, story-focused, caster, inventory-heavy, DM operations, and minimal. Presets should be explainable and reversible.
-- `VIEW-PERSONALIZATION-01E` Auto-design: recommend a preset plus layout from role, page, character powers, inventory emphasis, combat participation, and later usage patterns. Apply only after preview/confirmation.
-- `VIEW-PERSONALIZATION-01F` Guardrails: prevent customization from revealing masked combat data, hidden item bonuses, hidden knowledge, or raw opponent HP. Required live-combat information cannot be hidden. No arbitrary user JavaScript or unrestricted CSS in V1.
+### Group 15: New UI Design
+- `NEW-UI-DESIGN-01A` Design direction: choose visual direction, information architecture, and navigation model for player and DM workflows.
+- `NEW-UI-DESIGN-01B` Core integration: connect screens to `AppDataController`, `OnlineSessionService`, persistence helpers, realtime repositories, and pure selectors.
+- `NEW-UI-DESIGN-01C` Guardrails: preserve hidden combat identity, hidden item bonuses, hidden knowledge, and player/DM data separation in the new UI.
+- `NEW-UI-DESIGN-01D` Browser verification: run the rebuilt UI through desktop/mobile visual checks and core workflow checks before declaring it complete.
 
 ## Completed
 ### Group 1: Encounter Cast UI Standardization
@@ -54,6 +52,11 @@
 
 ### Group 13: Realtime DM/Player Sessions
 - `REALTIME-SESSION-01` completed. Added optional Supabase Auth/client wiring, SQL migrations with RLS policies, realtime repository helpers, `/dm/screen`, `/player/session`, persistent session events, DM-only and DM-and-actor rolls, public/limited text and card sharing, reward packets with audit/history updates, and navigation from DM/player/combat/character surfaces.
+
+### Group 14: UI Reset And Service Boundary
+- `UI-RESET-01` completed. Removed the old visual route/component/hook/style layer while keeping a minimal React/Vite/CSS shell for future UI work.
+- `APP-SERVICE-01` completed. Replaced React app-flow/session providers with pure TypeScript services: `AppDataController`, app data persistence helpers, and `OnlineSessionService`.
+- `VIEW-PERSONALIZATION-01` superseded. Personalization may return inside the future UI design, but it is no longer the active next implementation item.
 
 ## Blocked / Deferred
 ### Deferred Group D1: Future Expansion

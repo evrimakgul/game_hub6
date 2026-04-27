@@ -3,7 +3,7 @@ title: Split Decisions
 topic: history
 kind: register
 status: active
-updated: 2026-04-24
+updated: 2026-04-26
 confidence: high
 ---
 
@@ -19,7 +19,7 @@ Open splits revalidated on 2026-04-17:
 | --- | --- | --- | --- |
 | `COMBAT-ACT-01` | open | Physical attacks and ranged gear work now, but action cost, timing, weapon speed, and multi-attack throughput are still simplified. This gap is intentionally deferred to the very end of the project and may remain unimplemented. | `references/current_notes.md`, `project_tracking/tasks_todo.md`, thread `5` |
 | `DOC-OBJECTIVE-01` | open | `references/project_objective.md` still describes the older manual `Brute Defiance` trigger, while current code, roadmap, and notes reflect the passive version. | `references/project_objective.md`, `references/plan.md`, `references/current_notes.md`, `src/engine/encounterExecutionEngine.ts` |
-| `VIEW-PERSONALIZATION-01` | open | The user wants personalized player/DM page design soon, but current code has fixed layouts and no persisted view-profile system yet. | `raw/user-approved/2026-04-24-view-personalization-roadmap.md`, `references/plan.md`, `project_tracking/tasks_todo.md` |
+| `NEW-UI-DESIGN-01` | open | The old visual UI has been removed. A new player/DM UI and navigation model still need to be designed on top of the pure service layer. | `references/plan.md`, `wiki/runtime/ui-and-routes-map.md` |
 
 Resolved splits:
 
@@ -30,6 +30,7 @@ Resolved splits:
 | `KNOW-V2-01` | resolved | The standalone knowledge model now supports DM-authored `place`, `faction`, `story`, and `custom` subjects through `/dm/knowledge`, while the player-side Knowledge Library continues to browse mixed owned revisions. |
 | `ITEM-VAL-01` | resolved | Shared items now persist `baseStrength`, computed `anchorValue`, and optional `anchorValueOverride`, with DM-only value authoring/display on the live item surfaces. |
 | `UNARMORED-BASELINE-01` | resolved | Clothing / robes remain the existing `Initiative +2, DR +0` chest items, while characters now persist `apparelMode: humanoid | none` and humanoid characters with no chest/body item equipped receive a separate `+3 Initiative` naked-state baseline. |
+| `VIEW-PERSONALIZATION-01` | resolved | Superseded by the broader UI reset/new-UI direction. Personalization may return inside the future UI design, but it is no longer the active next implementation item. |
 | `KNOW-HISTORY-01` | resolved | Knowledge moved from history-only storage to standalone revisioned knowledge records plus history links. |
 | `ITEM-MODEL-01` | resolved | Embedded sheet item assumptions were replaced by shared standalone item entities with persisted definitions and blueprint-backed instances. |
 | `AURA-LIFECYCLE-01` | resolved | Aura spells stayed as aura spells; lifecycle and source-linked cleanup were fixed without inventing a new spell class. |
@@ -39,7 +40,7 @@ Resolved splits:
 
 - `COMBAT-ACT-01`: keep the timing/action-economy idea recorded, but treat it as endgame-only and optional rather than the default next milestone.
 - `DOC-OBJECTIVE-01`: reconcile the stale current-state objective doc with the passive `Brute Defiance` behavior already live in code.
-- `VIEW-PERSONALIZATION-01`: implement constrained personalized layouts through safe persisted profiles, registered page sections, reversible presets, and auto-design recommendations.
+- `NEW-UI-DESIGN-01`: design a new player/DM UI on top of `AppDataController`, persistence helpers, session services, and pure selectors.
 
 ## Key Decisions
 
@@ -49,7 +50,7 @@ Resolved splits:
 
 ## Deferred / Open
 
-- Awaiting eventual user or implementation resolution for: `COMBAT-ACT-01`, `DOC-OBJECTIVE-01`, `VIEW-PERSONALIZATION-01`.
+- Awaiting eventual user or implementation resolution for: `COMBAT-ACT-01`, `DOC-OBJECTIVE-01`, `NEW-UI-DESIGN-01`.
 
 ## Sources
 

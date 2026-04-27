@@ -497,80 +497,30 @@ This roadmap is the active implementation source of truth for this branch.
 - RLS policies are implemented in SQL and still need manual Supabase local/project verification beyond repository unit tests.
 - Existing local app state remains the offline/dev truth; live DM/player coordination is authoritative only inside configured Supabase sessions.
 
-## Planned Follow-Up: Personalized Page Design And Auto-Design
+## Completed Follow-Up: UI Reset With Future React/Vite Path
 
-### 13.1 View Profile Foundation
-- Add a persisted `ViewProfile` model for browser-local personalization.
-- Scope profiles by role, route/page, and optionally character id where the page is character-specific.
-- Include schema versioning, defaults, reset behavior, and migration-safe hydration.
-- Store only safe design tokens and layout preferences, not arbitrary user CSS or JavaScript.
-- Define a shared CSS-variable contract for:
-  - theme palette
-  - accent color
-  - density
-  - font scale
-  - panel style
-  - spacing
-  - motion level
+### 13.1 Current Visual UI Removal
+- Removed the old visual implementation layer:
+  - route pages
+  - React presentation components
+  - UI hooks and popover/form state
+  - current CSS screen/layout styles
+  - old router/navigation wiring
+- Kept a minimal React/Vite/CSS shell only so future Figma, Build Web Apps, or hand-tuned React UI work has a valid frontend entrypoint.
 
-### 13.2 Safe Manual Customization
-- Add an Appearance/Layout drawer reachable from player and DM surfaces.
-- Support live preview, save, reset, and profile switching.
-- Manual controls should include:
-  - theme
-  - density
-  - font scale
-  - section collapse state
-  - section pinning
-  - allowed section hiding
-  - allowed section ordering
-- Keep customization constrained by the page section registry.
+### 13.2 Core Service Extraction
+- Replaced React provider/hook state connectors with pure TypeScript services:
+  - `AppDataController`
+  - app data persistence helpers
+  - `OnlineSessionService`
+  - explicit Supabase client configuration
+- Kept mechanics, rules, engines, powers, items, knowledge, authoring, persistence, Supabase repositories, player data, and DM data intact.
 
-### 13.3 Page Layout Registry
-- Add a per-page registry of customizable sections.
-- Each section should declare whether it is:
-  - required
-  - optional
-  - hideable
-  - reorderable
-  - collapsible
-  - required during active combat
-- Implement pages in this order:
-  - player character sheet
-  - player combat mode
-  - player auction house
-  - DM dashboard
-  - DM combat encounter
-  - DM authoring pages
-
-### 13.4 Presets
-- Add reversible presets before full auto-design.
-- Initial presets:
-  - combat-focused
-  - story-focused
-  - caster
-  - inventory-heavy
-  - DM operations
-  - minimal
-- Presets should explain what they changed and allow returning to the previous profile.
-
-### 13.5 Auto-Design Recommendations
-- Auto-design should recommend a preset plus layout rather than generating unconstrained UI.
-- Recommendation inputs can include:
-  - role
-  - current page
-  - character powers
-  - inventory/equipment emphasis
-  - active combat participation
-  - later usage patterns after usage tracking exists
-- Auto-design must preview changes and require confirmation before saving.
-
-### 13.6 Guardrails And Limits
-- Customization must never reveal hidden combat identity, hidden item bonuses, hidden knowledge, or raw opponent HP.
-- Required combat state cannot be hidden during live combat.
-- Mobile layouts should use stricter allowed layout changes than desktop layouts.
-- V1 remains browser-local until backend/user accounts are reopened.
-- Do not add arbitrary user JavaScript or unrestricted CSS in V1.
+### 13.3 Current Boundary
+- The repo is now a core mechanics/data package with a placeholder frontend shell.
+- Future UI design is intentionally deferred until after this cleanup.
+- Future UI may be Figma-driven, Build Web Apps-driven, or hand-tuned directly in React/Vite/CSS.
+- Future UI should call the pure services instead of restoring the old React context/router layer.
 
 ## Validation
 - After each meaningful task group run:

@@ -3,7 +3,7 @@ title: Implemented Vs Deferred
 topic: project
 kind: status
 status: active
-updated: 2026-04-24
+updated: 2026-04-26
 confidence: high
 ---
 
@@ -16,7 +16,8 @@ This page is the compact "what is live versus what is still pending" reference. 
 Implemented and live:
 
 - Local-first character persistence, hydration, and backup recovery.
-- DM and player route flows.
+- Core player/DM data, mechanics, persistence, and live-session repositories.
+- UI reset: the previous visual route/component layer has been removed while React/Vite/CSS remain available for a future rebuild.
 - Optional Supabase-backed live sessions with Auth, DM Screen, Player Session, persistent events, secret rolls, sharing, and reward packets.
 - Combat encounter runtime with initiative, parties, effects, summons, and logs.
 - Player combat mode with masked initiative/party/activity views, AE-based opponent reveal, local shared encounter state, and own-turn action controls for the viewing character.
@@ -44,7 +45,7 @@ Deferred or partial:
 - General backend sync outside the live-session layer.
 - Full portal-run state / boss-clear reward automation / exit unlocking.
 - Broader player combat participation beyond the current own-turn action surface.
-- Personalized player/DM page design through `VIEW-PERSONALIZATION-01`.
+- New player/DM UI design and navigation flows on top of the pure service layer.
 - Timing/action-budget engine.
 
 ## Intended Direction
@@ -65,7 +66,7 @@ Deferred or partial:
 - general backend sync outside configured live sessions
 - encounter persistence
 - broader player combat participation beyond own-turn controls
-- `VIEW-PERSONALIZATION-01`
+- new UI design and visual workflow rebuild
 - `REPO-CLEANUP-01`
 
 ## Sources

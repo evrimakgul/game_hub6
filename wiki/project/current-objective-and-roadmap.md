@@ -3,13 +3,13 @@ title: Current Objective And Roadmap
 topic: project
 kind: roadmap
 status: active
-updated: 2026-04-24
+updated: 2026-04-26
 confidence: high
 ---
 
 ## Summary
 
-The current branch objective is no longer broad combat stabilization, and the repo has now closed the DM/player auction split, player combat-view gap, and live DM/player session layer. The next planned follow-up is `VIEW-PERSONALIZATION-01`: safe personalized page design for player and DM views.
+The current branch objective has shifted to a UI reset. The old visual route/component layer is removed, core mechanics/data remain intact, and the next major product step is a new UI design built on the extracted service layer.
 
 ## Current State
 
@@ -22,7 +22,9 @@ The current branch objective is no longer broad combat stabilization, and the re
 - `AUCTION-PLAYER-01` is now complete: player character sheets now link into `/player/auction-house`, completed `Bid` and `Buyout` actions spend character money, purchased items land in the buying character's `Items` section, and live auction stock now decrements until it reaches `0`.
 - `COMBAT-PLAYER-01` is now complete: DM-started encounters now also expose `/player/combat`, player character sheets and the player hub now link into `Combat Mode` for participating characters, hidden opponents stay masked unless the viewing character owns `Assess Entity` knowledge for that target, and the active encounter persists locally so DM/player windows stay aligned.
 - `REALTIME-SESSION-01` is now complete: optional Supabase Auth/session wiring now backs `/dm/screen` and `/player/session` with persistent events, secret rolls, limited sharing, card sharing, and reward packets.
-- `VIEW-PERSONALIZATION-01` is now the planned next item: browser-local personalized page design with safe manual controls, page section registries, reversible presets, and auto-design recommendations.
+- `UI-RESET-01` is now complete: old route pages, presentation components, UI hooks, navigation wiring, and screen CSS are removed.
+- Core app behavior now has pure TypeScript service entrypoints through `AppDataController`, app data persistence helpers, and `OnlineSessionService`.
+- New UI design is deferred until after cleanup and may use Figma, Build Web Apps, or hand-tuned React/Vite/CSS.
 - `COMBAT-ACT-01` is now intentionally parked at the very end of the project and may be skipped entirely unless priorities change.
 - Recent completed milestone groups include:
   - cast UI standardization
@@ -41,7 +43,7 @@ The current branch objective is no longer broad combat stabilization, and the re
 - Treat full portal-run automation as later follow-up work, not as part of the just-completed authoring workshop pass.
 - Treat the wiki as the place that reconciles roadmap intent against current implementation facts.
 - Keep future work disciplined around explicit open items rather than restarting already-closed architecture debates.
-- Treat personalization as constrained customization: safe tokens, registered sections, presets, and recommendations rather than arbitrary CSS/JS or unrestricted page building.
+- Treat the next UI as a fresh design on top of core services, not a restoration of deleted routes/components.
 
 ## Key Decisions
 
@@ -60,7 +62,7 @@ The current branch objective is no longer broad combat stabilization, and the re
 - richer player-side combat participation beyond the current own-turn action surface
 - Supabase RLS policy verification against a real local/project Supabase environment
 - email/display-name lookup for adding campaign members instead of user UUID entry
-- `VIEW-PERSONALIZATION-01` safe player/DM page personalization, including ViewProfile persistence, manual controls, page layouts, presets, and auto-design recommendations.
+- new player/DM UI design and navigation flows on top of the core service layer
 - `COMBAT-ACT-01` timing and action-economy layer, explicitly deferred to the end and possibly out of scope.
 - `PORTAL-RUNNER-01` full portal-run state, boss-clear reward automation, exit unlocking, and persistent run orchestration.
 - `REPO-CLEANUP-01` remove temporary `python.ipynb` as the literal last cleanup step.
@@ -71,10 +73,8 @@ The current branch objective is no longer broad combat stabilization, and the re
 - [references/project_objective.md](../../references/project_objective.md)
 - [references/current_notes.md](../../references/current_notes.md)
 - [project_tracking/tasks_todo.md](../../project_tracking/tasks_todo.md)
-- [src/routes/PlayerAuctionHousePage.tsx](../../src/routes/PlayerAuctionHousePage.tsx)
-- [src/routes/PlayerCombatPage.tsx](../../src/routes/PlayerCombatPage.tsx)
-- [src/routes/DmScreenPage.tsx](../../src/routes/DmScreenPage.tsx)
-- [src/routes/PlayerSessionPage.tsx](../../src/routes/PlayerSessionPage.tsx)
+- [src/services/appDataController.ts](../../src/services/appDataController.ts)
+- [src/services/onlineSessionService.ts](../../src/services/onlineSessionService.ts)
 - [wiki/domains/view-personalization.md](../domains/view-personalization.md)
 - [wiki/domains/realtime-sessions.md](../domains/realtime-sessions.md)
 

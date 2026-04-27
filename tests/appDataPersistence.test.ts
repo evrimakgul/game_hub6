@@ -27,12 +27,12 @@ import {
   readPersistedCharactersFromStorage,
   serializePersistedCharacters,
   writePersistedCharactersToStorage,
-} from "../src/state/appFlowPersistence.ts";
+} from "../src/services/appDataPersistence.ts";
 import { runTestSuite } from "./harness.ts";
 
-export async function runAppFlowPersistenceTests(): Promise<void> {
+export async function runAppDataPersistenceTests(): Promise<void> {
   const defaultAuctionEntries = createDefaultAuctionHouseEntries();
-  await runTestSuite("appFlowPersistence", [
+  await runTestSuite("appDataPersistence", [
     {
       name: "empty persisted state seeds starter items once",
       run: () => {

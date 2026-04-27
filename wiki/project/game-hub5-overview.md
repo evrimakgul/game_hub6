@@ -3,7 +3,7 @@ title: Game Hub 5 Overview
 topic: project
 kind: overview
 status: active
-updated: 2026-04-24
+updated: 2026-04-26
 confidence: high
 ---
 
@@ -13,8 +13,8 @@ confidence: high
 
 ## Current State
 
-- The app is a browser-based React/TypeScript project with route-driven player and DM flows.
-- Persistence is local-only and centered in app state plus browser storage.
+- The repo is now a React/Vite-capable TypeScript core package with the old route-driven visual UI removed.
+- Persistence is local-first and centered in pure app data services plus local storage.
 - Combat encounter corrections, power-rule reconciliation, Knowledge System V1, item-definition refactor, supplementary slots, and World Casting V1 are already implemented.
 - `Artifact Appraisal` is now fully integrated on the inventory/world-casting item-knowledge path.
 - Knowledge subject expansion is now live for DM-authored `place`, `faction`, `story`, and `custom` cards.
@@ -22,8 +22,8 @@ confidence: high
 - Characters now carry an explicit `apparelMode: humanoid | none`, and humanoid characters with no chest/body item equipped now receive a `+3 Initiative` naked-state baseline while clothing/robes remain separate `+2 Initiative` chest items.
 - Shared item entities, persisted item category/subcategory definitions, revisioned knowledge records, and the new mob/group/portal authoring records are live project concepts, not just planned concepts.
 - DM tooling now includes a standalone mob library with live derived-combat summary output, reusable mob groups with CR-budget controls, and a portal workshop that now serves as the portal-first `portal_bundle` Codex entrypoint before manual stage export into the combat dashboard.
-- Combat now has both a DM encounter runtime and a player-facing masked combat mode, with the active encounter shared through local persisted app state.
-- Personalized player/DM page design is now a planned near-term follow-up, not an implemented system.
+- Combat mechanics still support DM encounter runtime and player-facing masking rules, but the old visual pages have been removed pending a new UI.
+- New player/DM UI design is deferred until after the service/core cleanup.
 - Canonical non-code project truth currently lives across `references/` and `project_tracking/`, while detailed provenance lives in historical threads and chats.
 
 ## Intended Direction
@@ -33,7 +33,7 @@ confidence: high
 - Treat the new authoring workshop as a local-first canonical editor with a manual Codex import/export bridge, not as a live in-app AI chat system.
 - Use this wiki as the durable synthesis layer between raw conversations/docs and future implementation.
 - Keep "current implementation state" and "intended direction" separate whenever the code has not yet caught up with the latest decision.
-- Add view personalization through constrained profiles, registered page sections, presets, and auto-design recommendations while preserving hidden-information rules.
+- Build the next UI on top of the pure service boundary while preserving hidden-information rules.
 
 ## Key Decisions
 
@@ -42,14 +42,14 @@ confidence: high
 - Latest approved conversation direction outranks older conversation intent, but it does not override current implementation facts.
 - `History` remains an event log; durable knowledge belongs in standalone revisioned knowledge records.
 - Items are modeled as shared entities outside character sheets, with equip state and knowledge handled separately.
-- Portal and mob generation is currently a manual Codex request/response bridge layered on top of a strict website-side schema and editor, with the preferred flow now starting from a portal-first `portal_bundle` request on `/dm/portals`.
+- Portal and mob generation remains a manual Codex request/response bridge layered on top of strict data schemas; the previous `/dm/portals` visual entrypoint has been removed with the old UI.
 
 ## Deferred / Open
 
 - Full backend sync and richer encounter persistence beyond the current local browser-storage surface remain out of scope.
 - The future timing/action-economy layer is still deferred.
 - `python.ipynb` cleanup remains deferred to the literal last cleanup step.
-- `VIEW-PERSONALIZATION-01` is open as the next planned user-facing UX system.
+- New player/DM UI design is open and should use `AppDataController`, session services, and pure selectors instead of restoring deleted UI connectors.
 
 ## Sources
 
@@ -59,7 +59,7 @@ confidence: high
 - [project_tracking/tasks_todo.md](../../project_tracking/tasks_todo.md)
 - [wiki/domains/view-personalization.md](../domains/view-personalization.md)
 - [src/App.tsx](../../src/App.tsx)
-- [src/state/appFlow.tsx](../../src/state/appFlow.tsx)
+- [src/services/appDataController.ts](../../src/services/appDataController.ts)
 
 ## Raw
 

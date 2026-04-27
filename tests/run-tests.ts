@@ -1,4 +1,5 @@
-import { runAppFlowPersistenceTests } from "./appFlowPersistence.test.ts";
+import { runAppDataPersistenceTests } from "./appDataPersistence.test.ts";
+import { runAppDataControllerTests } from "./appDataController.test.ts";
 import { runAuthoringTests } from "./authoring.test.ts";
 import { runAuctionHouseTests } from "./auctionHouse.test.ts";
 import { runCharacterRuntimeTests } from "./characterRuntime.test.ts";
@@ -28,7 +29,8 @@ async function main(): Promise<void> {
   await runAuctionHouseTests();
   await runItemBehaviorTests();
   await runKnowledgeTests();
-  await runAppFlowPersistenceTests();
+  await runAppDataPersistenceTests();
+  await runAppDataControllerTests();
   await runCharacterRuntimeTests();
   await runCombatResolutionTests();
   await runCombatEncounterTests();
