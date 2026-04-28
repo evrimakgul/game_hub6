@@ -17,12 +17,23 @@ export async function runCharacterSheetModelTests(): Promise<void> {
       run: () => {
         assert.deepEqual(
           CHARACTER_SHEET_DETAIL_TABS.map((tab) => tab.id),
-          ["stats", "skills", "powers", "loadout", "inventory", "knowledge", "history", "notes"]
+          [
+            "resistances",
+            "stats",
+            "skills",
+            "powers",
+            "loadout",
+            "inventory",
+            "knowledge",
+            "history",
+            "notes",
+          ]
         );
         assert.equal(
           new Set(CHARACTER_SHEET_DETAIL_TABS.map((tab) => tab.id)).size,
           CHARACTER_SHEET_DETAIL_TABS.length
         );
+        assert.ok(isCharacterSheetDetailTabId("resistances"));
         assert.ok(isCharacterSheetDetailTabId("loadout"));
         assert.equal(isCharacterSheetDetailTabId("combat"), false);
       },
@@ -37,7 +48,7 @@ export async function runCharacterSheetModelTests(): Promise<void> {
         assert.equal(
           CHARACTER_SHEET_SUMMARY_SECTIONS.find((section) => section.id === "resistances")
             ?.targetTabId,
-          "stats"
+          "resistances"
         );
         assert.equal(
           CHARACTER_SHEET_SUMMARY_SECTIONS.find((section) => section.id === "stats")
@@ -81,7 +92,7 @@ export async function runCharacterSheetModelTests(): Promise<void> {
         assert.equal(model.identity.xpLeftOver, 28);
         assert.equal(model.resources.mana, 3);
         assert.equal(model.powers[0]?.name, "Awareness");
-        assert.equal(model.detailTabs.length, 8);
+        assert.equal(model.detailTabs.length, 9);
         assert.equal(model.summarySections.length, 5);
         assert.ok(model.statGroups.some((group) => group.title === "Physical"));
         assert.ok(model.skills.length > 0);

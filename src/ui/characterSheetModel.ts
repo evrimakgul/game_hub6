@@ -28,6 +28,7 @@ import {
 } from "../types/items.ts";
 
 export type CharacterSheetDetailTabId =
+  | "resistances"
   | "stats"
   | "skills"
   | "powers"
@@ -80,6 +81,7 @@ export type CharacterSheetSummaryConfig = {
 };
 
 export const CHARACTER_SHEET_DETAIL_TABS: CharacterSheetTabConfig[] = [
+  { id: "resistances", label: "Resistances", icon: "shield" },
   { id: "stats", label: "Stats", icon: "stats" },
   { id: "skills", label: "Skills", icon: "skill" },
   { id: "powers", label: "Powers", icon: "power" },
@@ -91,7 +93,7 @@ export const CHARACTER_SHEET_DETAIL_TABS: CharacterSheetTabConfig[] = [
 ];
 
 export const CHARACTER_SHEET_SUMMARY_SECTIONS: CharacterSheetSummaryConfig[] = [
-  { id: "resistances", label: "Resistances", icon: "shield", targetTabId: "stats" },
+  { id: "resistances", label: "Resistances", icon: "shield", targetTabId: "resistances" },
   { id: "stats", label: "Stats", icon: "stats", targetTabId: "stats" },
   { id: "skills", label: "Skills", icon: "skill", targetTabId: "skills" },
   { id: "powers", label: "Powers", icon: "power", targetTabId: "powers" },

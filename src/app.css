@@ -858,7 +858,7 @@ button {
 
 .detail-tab-rail {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 4px;
   border-bottom: 1px solid rgba(183, 139, 75, 0.32);
   padding: 5px;
@@ -965,6 +965,10 @@ button {
 
 .resistance-detail-card {
   margin-top: 10px;
+}
+
+.resistance-detail-card.standalone {
+  margin-top: 0;
 }
 
 .resistance-detail-grid {
@@ -1197,7 +1201,7 @@ button {
   }
 
   .detail-tab-rail {
-    grid-template-columns: repeat(8, minmax(84px, 1fr));
+    grid-template-columns: repeat(9, minmax(84px, 1fr));
     overflow-x: auto;
   }
 

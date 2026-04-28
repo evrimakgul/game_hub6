@@ -282,45 +282,48 @@ function ReadinessMetric({
 
 function renderStatsDetail(model: CharacterSheetUiModel) {
   return (
-    <>
-      <div className="stat-detail-grid">
-        {model.statGroups.map((group) => (
-          <section className="detail-card" key={group.title}>
-            <h3>
-              <SheetIcon icon={group.icon} />
-              {group.title}
-            </h3>
-            <div className="stat-table">
-              <span>Stat</span>
-              <span>Base</span>
-              <span>Gear</span>
-              <span>Buffs</span>
-              <span>Total</span>
-              {group.stats.map((stat) => (
-                <div className="stat-row" key={stat.id}>
-                  <strong>{stat.id}</strong>
-                  <span>{stat.base}</span>
-                  <span>{formatSigned(stat.gear)}</span>
-                  <span>{formatSigned(stat.buffs)}</span>
-                  <strong>{stat.value}</strong>
-                </div>
-              ))}
-            </div>
-          </section>
+    <div className="stat-detail-grid">
+      {model.statGroups.map((group) => (
+        <section className="detail-card" key={group.title}>
+          <h3>
+            <SheetIcon icon={group.icon} />
+            {group.title}
+          </h3>
+          <div className="stat-table">
+            <span>Stat</span>
+            <span>Base</span>
+            <span>Gear</span>
+            <span>Buffs</span>
+            <span>Total</span>
+            {group.stats.map((stat) => (
+              <div className="stat-row" key={stat.id}>
+                <strong>{stat.id}</strong>
+                <span>{stat.base}</span>
+                <span>{formatSigned(stat.gear)}</span>
+                <span>{formatSigned(stat.buffs)}</span>
+                <strong>{stat.value}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function renderResistanceDetail(model: CharacterSheetUiModel) {
+  return (
+    <section className="detail-card detail-card-full resistance-detail-card standalone">
+      <h3>
+        <SheetIcon icon="shield" />
+        Resistances
+      </h3>
+      <div className="resistance-detail-grid">
+        {model.resistanceRows.map((row) => (
+          <ResistanceChip key={row.id} row={row} />
         ))}
       </div>
-      <section className="detail-card resistance-detail-card">
-        <h3>
-          <SheetIcon icon="shield" />
-          Resistances
-        </h3>
-        <div className="resistance-detail-grid">
-          {model.resistanceRows.map((row) => (
-            <ResistanceChip key={row.id} row={row} />
-          ))}
-        </div>
-      </section>
-    </>
+    </section>
   );
 }
 
@@ -354,9 +357,9 @@ function renderSummaryCard(
     case "resistances":
       return (
         <button
-          className={getSummaryButtonClass("resistances", "stats", activeTabId)}
+          className={getSummaryButtonClass("resistances", "resistances", activeTabId)}
           key="resistances"
-          onClick={() => setActiveTabId("stats")}
+          onClick={() => setActiveTabId("resistances")}
           type="button"
         >
           <header>
@@ -620,6 +623,8 @@ function renderNotesDetail(model: CharacterSheetUiModel) {
 
 function renderDetail(model: CharacterSheetUiModel, activeTabId: CharacterSheetDetailTabId) {
   switch (activeTabId) {
+    case "resistances":
+      return renderResistanceDetail(model);
     case "stats":
       return renderStatsDetail(model);
     case "skills":
