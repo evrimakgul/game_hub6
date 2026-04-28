@@ -7,6 +7,7 @@
 - `NEW-UI-DESIGN-01B` Core integration: connect screens to `AppDataController`, `OnlineSessionService`, persistence helpers, realtime repositories, and pure selectors.
 - `NEW-UI-DESIGN-01C` Guardrails: preserve hidden combat identity, hidden item bonuses, hidden knowledge, and player/DM data separation in the new UI.
 - `NEW-UI-DESIGN-01D` Browser verification: run the rebuilt UI through desktop/mobile visual checks and core workflow checks before declaring it complete.
+- `NEW-UI-DESIGN-01G` Deferred: decide whether to add the floating D10 roll-helper after the major character-sheet layout is accepted.
 
 ## Completed
 ### Group 1: Encounter Cast UI Standardization
@@ -61,6 +62,7 @@
 
 ### Group 15: New UI Design
 - `NEW-UI-DESIGN-01E` completed. Character Sheet image-fidelity pass now adds the compact header chrome, shorter first section, roughly doubled second section, all resistance/stat/skill/power/loadout summaries, loadout icon slots with hover details, smaller text in the first/third sections, and verified desktop/mobile layout behavior.
+- `NEW-UI-DESIGN-01F` completed. Character Sheet closer reference-match pass split the top core into identity/date/status plus resource/readiness rows, widened the loadout summary to a 10-slot mock grid, made page-level vertical scroll acceptable when the larger detail workspace exceeds `975px`, and kept section-level overflow ready for future populated data.
 
 ## Blocked / Deferred
 ### Deferred Group D1: Future Expansion

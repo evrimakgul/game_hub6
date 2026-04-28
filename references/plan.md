@@ -573,6 +573,20 @@ This roadmap is the active implementation source of truth for this branch.
 - Added icon-based loadout slots with hover details.
 - Reduced the bottom workspace height and text scale while preserving top tabs and internal detail scrolling.
 
+## Completed Follow-Up: Character Sheet Closer Reference Match
+
+### 16.1 Layout Refinement
+- Track this as `NEW-UI-DESIGN-01F`.
+- Split the top core into a compact identity/date/status command area plus a separate resources/readiness row.
+- Keep the first and second sections tight; allow the larger third workspace to push the page slightly beyond `975px` when needed.
+- Keep vertical overflow available at page level, summary-card level, and detail-workspace level for future populated data.
+
+### 16.2 Mock Loadout Slots
+- Show 10 loadout mock slots in the summary card even before real icon art exists.
+- Filled slots use the item's current UI icon and empty slots use grayed mock slot holders.
+- Real item art/icon work remains deferred.
+- The floating D10 roll-helper remains deferred as `NEW-UI-DESIGN-01G`.
+
 ## Validation
 - After each meaningful task group run:
   - `npm run typecheck`

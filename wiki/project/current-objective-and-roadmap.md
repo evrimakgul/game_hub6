@@ -3,7 +3,7 @@ title: Current Objective And Roadmap
 topic: project
 kind: roadmap
 status: active
-updated: 2026-04-27
+updated: 2026-04-28
 confidence: high
 ---
 
@@ -26,6 +26,7 @@ The current branch objective has shifted from UI reset into new UI rebuild. The 
 - Core app behavior now has pure TypeScript service entrypoints through `AppDataController`, app data persistence helpers, and `OnlineSessionService`.
 - `CHAR-SHEET-TABS-01` is now complete: the new player character sheet uses an always-visible core-state top section, summary-only middle dashboard, and bottom icon-tab detail workspace.
 - `NEW-UI-DESIGN-01E` is now complete: the player character sheet has compact header chrome, a shorter top section, a roughly doubled middle section showing all resistance/stat/skill/power/loadout summaries, loadout icon hover details, and a smaller text-dense bottom workspace.
+- `NEW-UI-DESIGN-01F` is now complete: the player character sheet more closely follows the later reference image, with separated top command/readiness rows, 10 mock loadout slots, and page scroll allowed for the larger detail workspace.
 - New UI design may use Figma, Build Web Apps, or hand-tuned React/Vite/CSS; DM dashboard design remains deferred.
 - `COMBAT-ACT-01` is now intentionally parked at the very end of the project and may be skipped entirely unless priorities change.
 - Recent completed milestone groups include:
@@ -67,6 +68,7 @@ The current branch objective has shifted from UI reset into new UI rebuild. The 
 - email/display-name lookup for adding campaign members instead of user UUID entry
 - new player/DM UI design and navigation flows on top of the core service layer
 - DM dashboard tab framework and operational layout
+- `NEW-UI-DESIGN-01G` optional floating D10 roll-helper, deferred until after the major sheet layout is accepted
 - `COMBAT-ACT-01` timing and action-economy layer, explicitly deferred to the end and possibly out of scope.
 - `PORTAL-RUNNER-01` full portal-run state, boss-clear reward automation, exit unlocking, and persistent run orchestration.
 - `REPO-CLEANUP-01` remove temporary `python.ipynb` as the literal last cleanup step.

@@ -3,7 +3,7 @@ title: UI Reset And Future Interface Boundary
 topic: runtime
 kind: architecture
 status: active
-updated: 2026-04-27
+updated: 2026-04-28
 confidence: high
 ---
 
@@ -16,6 +16,7 @@ The previous route/component UI has been removed. The first rebuilt surface is n
 - `src/App.tsx` now hosts the rebuilt player character sheet surface, or an empty-state create-character entrypoint when local storage has no player character.
 - `src/ui/CharacterSheet.tsx` renders the new three-section player sheet: always-visible core state, summary-only middle cards, and a bottom detail workspace with top icon tabs.
 - `src/ui/characterSheetModel.ts` maps controller snapshots into UI-local character-sheet display models, tab/icon config, mode indicators, and resistance projections.
+- The latest sheet layout separates identity/date/status from resources/readiness, uses a 10-slot mock loadout summary grid, and allows page-level vertical scroll when the larger detail workspace exceeds `975px`.
 - Old route pages, presentation components, UI hooks, route navigation, and screen CSS were removed.
 - `src/services/appDataController.ts` is the future UI-facing app data controller for characters, items, auctions, knowledge, authoring content, world casts, Artifact Appraisal, and active encounters.
 - `src/services/appDataPersistence.ts` owns local storage hydration, serialization, starter data backfill, and backup recovery.
@@ -41,6 +42,7 @@ The previous route/component UI has been removed. The first rebuilt surface is n
 - Middle summary cards act as shortcuts into matching bottom detail tabs instead of expanding in place.
 - The middle dashboard uses `Resistances` instead of duplicating combat summary values; resistance details live in the `Stats` tab and are derived from existing resistance mechanics.
 - `NEW-UI-DESIGN-01E` stayed UI-only; it did not change mechanics/data contracts or persist tab state.
+- `NEW-UI-DESIGN-01F` also stayed UI-only; real loadout art/icons and the floating D10 roll-helper remain deferred.
 
 ## Deferred / Open
 

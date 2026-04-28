@@ -2,6 +2,12 @@
 
 ## 2026-04-27
 
+- `NEW-UI-DESIGN-01F` completed.
+  - Reworked the character sheet toward the later reference image: identity/date/status row, separate resources/readiness row, five-card summary dashboard, top-tab detail workspace, and related-knowledge footer.
+  - Changed loadout summary to always show 10 mock slots, including disabled/empty supplementary placeholders.
+  - Allowed page-level vertical scroll when the larger third workspace exceeds `975px`; summary/detail sections keep internal overflow behavior for future populated data.
+  - Deferred the floating D10 roll-helper until after the major sheet layout is accepted.
+  - Validation: `npm.cmd run typecheck`, `npm.cmd test`, `npm.cmd run build`, plus desktop/mobile browser layout checks.
 - `NEW-UI-DESIGN-01E` completed.
   - Added compact app/header chrome to the rebuilt character sheet.
   - Shortened the first section and reduced text scale in the first and third sections.

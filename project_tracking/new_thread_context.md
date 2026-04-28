@@ -5,9 +5,9 @@
 - Workspace is `C:\Users\Evrim\Desktop\FRP\Convergence\game_hub6` on `main`.
 - The old visual UI has been removed: route pages, presentation components, UI hooks, navigation wiring, and old CSS screens are gone.
 - React/Vite/CSS now host the first rebuilt player character sheet surface in `src/App.tsx`, `src/app.css`, `src/ui/CharacterSheet.tsx`, and `src/ui/characterSheetModel.ts`.
-- The accepted character-sheet structure is implemented: compact header chrome, always-visible top core state, taller full-summary middle dashboard, and bottom icon-tab detail workspace.
+- The accepted character-sheet structure is implemented: compact header chrome, identity/date/status command row, resources/readiness row, taller full-summary middle dashboard, and bottom icon-tab detail workspace.
 - Bottom detail tabs are `Stats`, `Skills`, `Powers`, `Loadout`, `Inventory`, `Knowledge`, `History`, and `Notes`; summary cards for `Stats`, `Skills`, `Powers`, and `Loadout` switch the matching detail tab.
-- `NEW-UI-DESIGN-01E` is complete: the second section is taller and shows all resistances, total stats, total skills, powers with levels, and loadout icons with hover details; first/third section text is smaller.
+- `NEW-UI-DESIGN-01F` is complete: the sheet is closer to the later reference image, with 10 mock loadout slots, page scroll allowed for larger detail content, and section-level overflow ready for future populated data. Floating D10 roll-helper work is deferred as `NEW-UI-DESIGN-01G`.
 - Core mechanics/data remain in `src/config`, `src/engine`, `src/lib`, `src/mutations`, `src/powers`, `src/rules`, `src/selectors`, `src/services`, and `src/types`.
 - Future UI work should start from `src/services/appDataController.ts`, `src/services/appDataPersistence.ts`, `src/services/onlineSessionService.ts`, `src/lib/realtimeSessionRepository.ts`, and pure selectors.
 - `VIEW-PERSONALIZATION-01` is superseded by `NEW-UI-DESIGN-01`; DM dashboard design remains deferred and is the next large unresolved UI surface.

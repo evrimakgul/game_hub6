@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 
+import { formatDateDayMonthYear } from "../lib/dateTime.ts";
 import type { AppDataSnapshot } from "../services/appDataController.ts";
 import type { CharacterRecord } from "../types/character.ts";
 import {
@@ -165,29 +166,6 @@ function SheetIcon({ icon }: { icon: CharacterSheetIconId }) {
   }
 }
 
-function MetricCard({
-  icon,
-  label,
-  value,
-  detail,
-}: {
-  icon: CharacterSheetIconId;
-  label: string;
-  value: string;
-  detail?: string;
-}) {
-  return (
-    <div className="metric-card">
-      <span className="metric-icon">
-        <SheetIcon icon={icon} />
-      </span>
-      <span className="metric-label">{label}</span>
-      <strong>{value}</strong>
-      {detail ? <small>{detail}</small> : null}
-    </div>
-  );
-}
-
 function EmptyList({ label }: { label: string }) {
   return <p className="empty-list">{label}</p>;
 }
@@ -234,6 +212,72 @@ function getLoadoutTooltip(slot: CharacterSheetUiModel["loadoutSlots"][number]):
   }
 
   return `${slot.label}: ${slot.item.name}. ${slot.item.summary}`;
+}
+
+function StatusRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: CharacterSheetIconId;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="status-row">
+      <SheetIcon icon={icon} />
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function ResourceTile({
+  icon,
+  label,
+  value,
+  tone,
+  dots,
+}: {
+  icon: CharacterSheetIconId;
+  label: string;
+  value: string;
+  tone: string;
+  dots?: number;
+}) {
+  return (
+    <div className={`resource-tile ${tone}`}>
+      <SheetIcon icon={icon} />
+      <span>{label}</span>
+      {dots ? (
+        <div className="resource-dots" aria-label={`${label}: ${dots}`}>
+          {Array.from({ length: Math.min(dots, 5) }, (_, index) => (
+            <i key={index} />
+          ))}
+        </div>
+      ) : (
+        <strong>{value}</strong>
+      )}
+    </div>
+  );
+}
+
+function ReadinessMetric({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+}) {
+  return (
+    <div className="readiness-metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      {detail ? <small>{detail}</small> : <small>&nbsp;</small>}
+    </div>
+  );
 }
 
 function renderStatsDetail(model: CharacterSheetUiModel) {
@@ -597,6 +641,7 @@ function renderDetail(model: CharacterSheetUiModel, activeTabId: CharacterSheetD
 
 export function CharacterSheet({ snapshot, character }: CharacterSheetProps) {
   const [activeTabId, setActiveTabId] = useState<CharacterSheetDetailTabId>("stats");
+  const actualDate = useMemo(() => formatDateDayMonthYear(new Date()), []);
   const model = useMemo(
     () => buildCharacterSheetUiModel(snapshot, character),
     [character, snapshot]
@@ -604,11 +649,11 @@ export function CharacterSheet({ snapshot, character }: CharacterSheetProps) {
   const activeTab =
     CHARACTER_SHEET_DETAIL_TABS.find((tab) => tab.id === activeTabId) ??
     CHARACTER_SHEET_DETAIL_TABS[0];
-  const statusItems = [
-    ...model.status.tags,
-    ...model.status.effects,
-    ...model.status.utilityTraits,
-  ].slice(0, 5);
+  const primaryEffect = model.status.effects[0] ?? model.status.tags[0] ?? "Ready";
+  const primaryUtility = model.status.utilityTraits[0] ?? "No active utility trait";
+  const powerTracking =
+    model.powers.length > 0 ? `${model.powers.length} known powers` : "No known powers";
+  const relatedKnowledge = model.knowledgeRows[0];
 
   return (
     <main className="character-shell" aria-label="Convergence character sheet">
@@ -648,7 +693,6 @@ export function CharacterSheet({ snapshot, character }: CharacterSheetProps) {
               {getInitials(model.identity.name) || "C"}
             </div>
             <div className="identity-copy">
-              <span className="eyebrow">Convergence Character Sheet</span>
               <h1>{model.identity.name}</h1>
               <p>
                 {model.identity.concept} <span>/</span> {model.identity.faction}
@@ -667,75 +711,40 @@ export function CharacterSheet({ snapshot, character }: CharacterSheetProps) {
             </div>
           </article>
 
-          <article className="vital-panel panel-frame">
-            <MetricCard
-              icon="heart"
-              label="HP"
-              value={`${model.resources.hp} / ${model.resources.maxHp}`}
-              detail={
-                model.resources.temporaryHp > 0 ? `Temp ${model.resources.temporaryHp}` : undefined
-              }
-            />
-            <MetricCard
-              icon="mana"
-              label="Mana"
-              value={`${model.resources.mana} / ${model.resources.maxMana}`}
-            />
-            <MetricCard
-              icon="shield"
-              label="AC"
-              value={`${model.combat.armorClass}`}
-              detail={`DR ${model.combat.damageReduction}`}
-            />
-            <MetricCard
-              icon="clock"
-              label="Initiative"
-              value={formatSigned(model.combat.initiative)}
-              detail={model.combat.movement}
-            />
-            <MetricCard icon="shield" label="Soak" value={`${model.combat.soak}`} />
-            <MetricCard icon="walk" label="Movement" value={model.combat.movement} />
-            <MetricCard
-              icon="sword"
-              label="Melee"
-              value={formatSigned(model.combat.meleeAttack)}
-              detail={`Damage ${formatSigned(model.combat.meleeDamage)}`}
-            />
-            <MetricCard
-              icon="target"
-              label="Ranged"
-              value={formatSigned(model.combat.rangedAttack)}
-              detail={`Damage ${model.combat.rangedDamage}`}
-            />
+          <article className="chronicle-panel panel-frame">
+            <div className="date-stack">
+              <div>
+                <SheetIcon icon="clock" />
+                <span>Actual Date</span>
+                <strong>{actualDate}</strong>
+              </div>
+              <div>
+                <SheetIcon icon="history" />
+                <span>Game Date-Time</span>
+                <strong>{character.sheet.gameDateTime}</strong>
+              </div>
+            </div>
+            <div className="xp-block">
+              <span>XP</span>
+              <div>
+                <small>Earned</small>
+                <strong>{model.identity.xpEarned}</strong>
+              </div>
+              <div>
+                <small>Used</small>
+                <strong>{model.identity.xpUsed}</strong>
+              </div>
+              <div>
+                <small>Left-Over</small>
+                <strong>{model.identity.xpLeftOver}</strong>
+              </div>
+            </div>
           </article>
 
           <article className="state-panel panel-frame">
-            <div>
-              <span className="eyebrow">Overview State</span>
-              <div className="state-grid">
-                <MetricCard
-                  icon="spark"
-                  label="Inspiration"
-                  value={`${model.resources.inspiration}`}
-                />
-                <MetricCard
-                  icon="flame"
-                  label="Temp Insp."
-                  value={`${model.resources.temporaryInspiration}`}
-                />
-                <MetricCard
-                  icon="spark"
-                  label="Karma"
-                  value={`+${model.resources.positiveKarma} / -${model.resources.negativeKarma}`}
-                />
-                <MetricCard
-                  icon="coin"
-                  label="Money"
-                  value={`${model.resources.money}`}
-                  detail={`XP left ${model.identity.xpLeftOver}`}
-                />
-              </div>
-            </div>
+            <StatusRow icon="spark" label="Active Effect" value={primaryEffect} />
+            <StatusRow icon="target" label="Utility Trait" value={primaryUtility} />
+            <StatusRow icon="flame" label="Power Tracking" value={powerTracking} />
             <div className="mode-strip" aria-label="View and edit mode">
               {model.modeIndicators.map((indicator) => (
                 <span className={`mode-pill ${indicator.tone}`} key={indicator.id}>
@@ -743,17 +752,71 @@ export function CharacterSheet({ snapshot, character }: CharacterSheetProps) {
                 </span>
               ))}
             </div>
-            <div className="status-line">
-              <span className="eyebrow">Status / Effects</span>
-              <div className="status-strip">
-                {statusItems.length > 0 ? (
-                  statusItems.map((item) => <span key={item}>{item}</span>)
-                ) : (
-                  <span>Ready</span>
-                )}
-              </div>
-            </div>
           </article>
+        </section>
+
+        <section className="readiness-band" aria-label="Resources and combat readiness">
+          <div className="resource-strip">
+            <ResourceTile
+              icon="heart"
+              label="HP"
+              value={`${model.resources.hp} / ${model.resources.maxHp}`}
+              tone="hp"
+            />
+            <ResourceTile
+              icon="mana"
+              label="Mana"
+              value={`${model.resources.mana} / ${model.resources.maxMana}`}
+              tone="mana"
+            />
+            <ResourceTile
+              dots={Math.max(model.resources.inspiration, 1)}
+              icon="spark"
+              label="Inspiration"
+              value={`${model.resources.inspiration}`}
+              tone="inspiration"
+            />
+            <ResourceTile
+              dots={Math.max(model.resources.positiveKarma + model.resources.negativeKarma, 1)}
+              icon="coin"
+              label="Karma"
+              value={`+${model.resources.positiveKarma} / -${model.resources.negativeKarma}`}
+              tone="karma"
+            />
+            <ResourceTile
+              icon="coin"
+              label="Money"
+              value={`${model.resources.money}`}
+              tone="money"
+            />
+          </div>
+          <div className="combat-strip panel-frame">
+            <ReadinessMetric
+              label="Init"
+              value={`${model.combat.initiative}`}
+              detail="DEX + WITS"
+            />
+            <ReadinessMetric label="Move" value={model.combat.movement} detail="Base + dash" />
+            <ReadinessMetric label="AC" value={`${model.combat.armorClass}`} detail="DEX + gear" />
+            <ReadinessMetric label="DR" value={`${model.combat.damageReduction}`} detail="Armor" />
+            <ReadinessMetric label="Soak" value={`${model.combat.soak}`} detail="STAM" />
+            <ReadinessMetric
+              label="Melee Atk"
+              value={`${model.combat.meleeAttack}`}
+              detail="Derived"
+            />
+            <ReadinessMetric
+              label="Ranged Atk"
+              value={`${model.combat.rangedAttack}`}
+              detail="Derived"
+            />
+            <ReadinessMetric
+              label="Melee Dmg"
+              value={`${model.combat.meleeDamage}`}
+              detail="STR + Gear"
+            />
+            <ReadinessMetric label="Ranged Dmg" value={model.combat.rangedDamage} />
+          </div>
         </section>
 
         <section className="summary-grid" aria-label="Character summaries">
@@ -788,6 +851,14 @@ export function CharacterSheet({ snapshot, character }: CharacterSheetProps) {
             <div className="detail-scroll">{renderDetail(model, activeTabId)}</div>
           </article>
         </section>
+
+        <aside className="related-knowledge-bar panel-frame" aria-label="Related knowledge">
+          <span>
+            <SheetIcon icon="book" />
+            Related Knowledge
+          </span>
+          {relatedKnowledge ? <strong>{relatedKnowledge.title}</strong> : <em>No related cards</em>}
+        </aside>
       </div>
     </main>
   );

@@ -3,7 +3,7 @@ title: Implemented Vs Deferred
 topic: project
 kind: status
 status: active
-updated: 2026-04-27
+updated: 2026-04-28
 confidence: high
 ---
 
@@ -39,6 +39,7 @@ Implemented and live:
 - World Casting V1 for a limited set of supported powers.
 - `Artifact Appraisal` integration through the inventory shortcut, canonical item-card revision refresh, and linked history-entry flow.
 - Player character sheet rebuilt/fidelity pass with compact header chrome, taller full-summary middle section, top-tab detail workspace, and loadout icon hover details.
+- Closer player character-sheet reference-match pass with separated command/readiness rows, 10 mock loadout slots, and accepted vertical page scroll for larger detail content.
 
 Deferred or partial:
 
@@ -68,6 +69,7 @@ Deferred or partial:
 - encounter persistence
 - broader player combat participation beyond own-turn controls
 - new UI design and visual workflow rebuild
+- optional floating D10 roll-helper after major sheet layout acceptance
 - `REPO-CLEANUP-01`
 
 ## Sources

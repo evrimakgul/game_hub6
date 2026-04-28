@@ -59,3 +59,4 @@
 - `APP-SERVICE-01` Added pure app/session service boundaries through `AppDataController`, `appDataPersistence`, and `OnlineSessionService`.
 - `CHAR-SHEET-TABS-01` Added the first rebuilt player character sheet UI with a fixed core-state top section, summary-only middle dashboard, bottom icon-tab detail workspace, UI-local tab state, and model/config tests.
 - `NEW-UI-DESIGN-01E` Completed the character-sheet image-fidelity pass with compact header chrome, shorter top core, taller full-summary middle section, icon loadout slots with hover details, smaller bottom workspace text, and desktop/mobile browser verification.
+- `NEW-UI-DESIGN-01F` Completed a closer reference-match character-sheet pass with separate identity/date/status and resource/readiness rows, 10 mock loadout slots, accepted page scroll for larger detail content, and deferred D10 roll-helper work.

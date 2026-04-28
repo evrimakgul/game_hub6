@@ -26,6 +26,8 @@ This file tracks active reminders for the current implementation block.
 - Character Sheet Holistic Completion Pass is complete: the middle dashboard now uses `Resistances` instead of duplicate combat summary stats, and the `Stats` detail tab shows the full resistance grid from existing mechanics.
 - The character sheet tab state is UI-local only, and data still flows through `AppDataController`, `buildPlayerCharacterViewModel`, and pure item/knowledge helpers.
 - `NEW-UI-DESIGN-01E` is complete: the character sheet now has compact header chrome, a shorter first section, a taller second section with all resistance/stat/skill/power/loadout summaries, icon-based loadout slots with item hover details, and a smaller text-dense bottom workspace.
+- `NEW-UI-DESIGN-01F` is complete: the character sheet now more closely follows the accepted reference with separate identity/date/status and resource/readiness rows, 10 mock loadout slots, page scroll allowed for larger detail content, and section overflow ready for future populated data.
+- The floating D10 roll-helper is deferred as `NEW-UI-DESIGN-01G` until after the major character-sheet layout is accepted.
 - Validation passed for the current pass: `npm.cmd run typecheck`, `npm.cmd test`, `npm.cmd run build`, and desktop/mobile browser layout checks.
 
 ## Confirmed Rules For This Block

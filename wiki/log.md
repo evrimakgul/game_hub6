@@ -200,3 +200,10 @@
 - Updated: `project/implemented-vs-deferred`
 - Updated: `runtime/ui-and-routes-map`
 - Updated: `history/split-decisions`
+
+## [2026-04-28] refresh | character sheet closer reference match
+- Recorded `NEW-UI-DESIGN-01F` as complete.
+- Captured the separated identity/date/status and resources/readiness rows, 10 mock loadout slots, accepted page scroll for larger detail content, and deferred D10 roll-helper.
+- Updated: `project/current-objective-and-roadmap`
+- Updated: `project/implemented-vs-deferred`
+- Updated: `runtime/ui-and-routes-map`

@@ -22,7 +22,6 @@ import {
 } from "../rules/resistances.ts";
 import type { CharacterRecord, StatId } from "../types/character.ts";
 import {
-  CANONICAL_EQUIPMENT_SLOT_IDS,
   isSupplementaryEquipmentSlotId,
   type CanonicalEquipmentSlotId,
   type SharedItemRecord,
@@ -121,6 +120,19 @@ export const CHARACTER_SHEET_ICON_MAP: Record<string, CharacterSheetIconId> = {
   earring: "spark",
   charm: "spark",
 };
+
+const CHARACTER_SHEET_LOADOUT_SLOT_ORDER: CanonicalEquipmentSlotId[] = [
+  "head",
+  "earring",
+  "charm",
+  "neck",
+  "body",
+  "ring_left",
+  "ring_right",
+  "weapon_primary",
+  "weapon_secondary",
+  "orbital",
+];
 
 export type CharacterSheetStatRow = {
   id: StatId;
@@ -427,10 +439,7 @@ export function buildCharacterSheetUiModel(
     .sort((left, right) => right.total - left.total || left.label.localeCompare(right.label))
     .slice(0, 6);
 
-  const loadoutSlots = CANONICAL_EQUIPMENT_SLOT_IDS.filter(
-    (slotId) =>
-      !isSupplementaryEquipmentSlotId(slotId) || sheet.enabledSupplementarySlotIds.includes(slotId)
-  ).map((slotId) => {
+  const loadoutSlots = CHARACTER_SHEET_LOADOUT_SLOT_ORDER.map((slotId) => {
     const item = getEquipmentItemBySlot(sheet, slotId, itemsById);
     return {
       slotId,

@@ -86,6 +86,8 @@ export async function runCharacterSheetModelTests(): Promise<void> {
         assert.ok(model.statGroups.some((group) => group.title === "Physical"));
         assert.ok(model.skills.length > 0);
         assert.ok(model.loadoutSlots.some((slot) => slot.slotId === "weapon_primary"));
+        assert.equal(model.loadoutSlots.length, 10);
+        assert.ok(model.loadoutSlots.some((slot) => slot.slotId === "orbital" && !slot.item));
         assert.equal(model.resistanceRows.length, 11);
         assert.ok(model.modeIndicators.some((indicator) => indicator.label === "View Only"));
       },

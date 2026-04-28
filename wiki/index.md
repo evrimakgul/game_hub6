@@ -9,8 +9,8 @@ Project-level pages track scope, roadmap, and what is already implemented.
 | Article | Summary | Updated |
 | --- | --- | --- |
 | [game-hub5-overview](./project/game-hub5-overview.md) | High-level product, constraints, architecture posture, and source hierarchy. | 2026-04-26 |
-| [current-objective-and-roadmap](./project/current-objective-and-roadmap.md) | Current branch objective and the near-term roadmap anchored to canonical docs. | 2026-04-27 |
-| [implemented-vs-deferred](./project/implemented-vs-deferred.md) | Snapshot of completed systems versus explicitly deferred work. | 2026-04-27 |
+| [current-objective-and-roadmap](./project/current-objective-and-roadmap.md) | Current branch objective and the near-term roadmap anchored to canonical docs. | 2026-04-28 |
+| [implemented-vs-deferred](./project/implemented-vs-deferred.md) | Snapshot of completed systems versus explicitly deferred work. | 2026-04-28 |
 
 ## Runtime
 
@@ -19,7 +19,7 @@ Runtime pages track application structure, persistence, and user-facing navigati
 | Article | Summary | Updated |
 | --- | --- | --- |
 | [state-and-persistence](./runtime/state-and-persistence.md) | Local-first app state, hydration flow, and service/persistence boundaries. | 2026-04-26 |
-| [ui-and-routes-map](./runtime/ui-and-routes-map.md) | Current rebuilt character sheet surface and future React/Vite interface direction. | 2026-04-27 |
+| [ui-and-routes-map](./runtime/ui-and-routes-map.md) | Current rebuilt character sheet surface and future React/Vite interface direction. | 2026-04-28 |
 
 ## Domains
 
