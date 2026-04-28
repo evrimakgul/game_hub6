@@ -7,7 +7,6 @@
 - `NEW-UI-DESIGN-01B` Core integration: connect screens to `AppDataController`, `OnlineSessionService`, persistence helpers, realtime repositories, and pure selectors.
 - `NEW-UI-DESIGN-01C` Guardrails: preserve hidden combat identity, hidden item bonuses, hidden knowledge, and player/DM data separation in the new UI.
 - `NEW-UI-DESIGN-01D` Browser verification: run the rebuilt UI through desktop/mobile visual checks and core workflow checks before declaring it complete.
-- `NEW-UI-DESIGN-01E` Character Sheet image-fidelity pass: make the rebuilt sheet closely match the accepted dark reference at `1300 x 975`, preserving `Resistances` in place of the reference `Combat Summary`. Scope includes the top app/header chrome, denser/smaller first section, a second section roughly twice its current height showing all resistances, all total stats, all total skills, all powers with levels, and loadout icon slots with item-hover details, plus a smaller top-tab detail workspace with smaller text, internal bottom scrolling, and desktop/mobile browser screenshot checks.
 
 ## Completed
 ### Group 1: Encounter Cast UI Standardization
@@ -59,6 +58,9 @@
 - `APP-SERVICE-01` completed. Replaced React app-flow/session providers with pure TypeScript services: `AppDataController`, app data persistence helpers, and `OnlineSessionService`.
 - `CHAR-SHEET-TABS-01` completed. Added the first rebuilt player character sheet UI with always-visible core state, summary-only middle cards, bottom icon tabs, UI-local tab state, and a tested character-sheet UI model.
 - `VIEW-PERSONALIZATION-01` superseded. Personalization may return inside the future UI design, but it is no longer the active next implementation item.
+
+### Group 15: New UI Design
+- `NEW-UI-DESIGN-01E` completed. Character Sheet image-fidelity pass now adds the compact header chrome, shorter first section, roughly doubled second section, all resistance/stat/skill/power/loadout summaries, loadout icon slots with hover details, smaller text in the first/third sections, and verified desktop/mobile layout behavior.
 
 ## Blocked / Deferred
 ### Deferred Group D1: Future Expansion

@@ -9,6 +9,7 @@ import {
   type CharacterSheetIconId,
   type CharacterSheetItemRow,
   type CharacterSheetResistanceRow,
+  type CharacterSheetSummarySectionId,
   type CharacterSheetUiModel,
 } from "./characterSheetModel.ts";
 
@@ -227,6 +228,14 @@ function ResistanceChip({
   );
 }
 
+function getLoadoutTooltip(slot: CharacterSheetUiModel["loadoutSlots"][number]): string {
+  if (!slot.item) {
+    return `${slot.label}: open slot`;
+  }
+
+  return `${slot.label}: ${slot.item.name}. ${slot.item.summary}`;
+}
+
 function renderStatsDetail(model: CharacterSheetUiModel) {
   return (
     <>
@@ -272,32 +281,21 @@ function renderStatsDetail(model: CharacterSheetUiModel) {
 }
 
 function getSummaryButtonClass(
+  summaryId: CharacterSheetSummarySectionId,
   targetTabId: CharacterSheetDetailTabId,
   activeTabId: CharacterSheetDetailTabId
 ): string {
-  return `summary-card panel-frame summary-button${
+  return `summary-card panel-frame summary-button summary-${summaryId}${
     activeTabId === targetTabId ? " summary-active" : ""
   }`;
 }
 
 function renderResistanceSummary(model: CharacterSheetUiModel) {
-  if (model.highlightedResistanceRows.length === 0) {
-    return (
-      <div className="resistance-summary-list">
-        <ResistanceChip row={model.resistanceRows.find((row) => row.id === "physical")!} compact />
-        <p className="empty-list">All other damage types are normal.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="resistance-summary-list">
-      {model.highlightedResistanceRows.slice(0, 5).map((row) => (
+    <div className="resistance-summary-grid">
+      {model.resistanceRows.map((row) => (
         <ResistanceChip compact key={row.id} row={row} />
       ))}
-      {model.highlightedResistanceRows.length > 5 ? (
-        <p className="empty-list">+{model.highlightedResistanceRows.length - 5} more</p>
-      ) : null}
     </div>
   );
 }
@@ -306,13 +304,13 @@ function renderSummaryCard(
   model: CharacterSheetUiModel,
   activeTabId: CharacterSheetDetailTabId,
   setActiveTabId: (tabId: CharacterSheetDetailTabId) => void,
-  summaryId: string
+  summaryId: CharacterSheetSummarySectionId
 ) {
   switch (summaryId) {
     case "resistances":
       return (
         <button
-          className={getSummaryButtonClass("stats", activeTabId)}
+          className={getSummaryButtonClass("resistances", "stats", activeTabId)}
           key="resistances"
           onClick={() => setActiveTabId("stats")}
           type="button"
@@ -327,7 +325,7 @@ function renderSummaryCard(
     case "stats":
       return (
         <button
-          className={getSummaryButtonClass("stats", activeTabId)}
+          className={getSummaryButtonClass("stats", "stats", activeTabId)}
           key="stats"
           type="button"
           onClick={() => setActiveTabId("stats")}
@@ -336,18 +334,27 @@ function renderSummaryCard(
             <SheetIcon icon="stats" />
             <h2>Stats</h2>
           </header>
-          {model.statGroups.map((group) => (
-            <div className="summary-row" key={group.title}>
-              <span>{group.title}</span>
-              <strong>{group.stats.map((stat) => `${stat.id} ${stat.value}`).join(" / ")}</strong>
-            </div>
-          ))}
+          <div className="summary-stat-groups">
+            {model.statGroups.map((group) => (
+              <div className="summary-stat-group" key={group.title}>
+                <span>{group.title}</span>
+                <div>
+                  {group.stats.map((stat) => (
+                    <strong key={stat.id}>
+                      {stat.id}
+                      <em>{stat.value}</em>
+                    </strong>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </button>
       );
     case "skills":
       return (
         <button
-          className={getSummaryButtonClass("skills", activeTabId)}
+          className={getSummaryButtonClass("skills", "skills", activeTabId)}
           key="skills"
           type="button"
           onClick={() => setActiveTabId("skills")}
@@ -356,18 +363,20 @@ function renderSummaryCard(
             <SheetIcon icon="skill" />
             <h2>Skills</h2>
           </header>
-          {model.topSkills.slice(0, 5).map((skill) => (
-            <div className="summary-row" key={skill.id}>
-              <span>{skill.label}</span>
-              <strong>{formatSigned(skill.total)}</strong>
-            </div>
-          ))}
+          <div className="summary-skill-grid">
+            {model.skills.map((skill) => (
+              <div className="summary-mini-row" key={skill.id}>
+                <span>{skill.label}</span>
+                <strong>{formatSigned(skill.total)}</strong>
+              </div>
+            ))}
+          </div>
         </button>
       );
     case "powers":
       return (
         <button
-          className={getSummaryButtonClass("powers", activeTabId)}
+          className={getSummaryButtonClass("powers", "powers", activeTabId)}
           key="powers"
           type="button"
           onClick={() => setActiveTabId("powers")}
@@ -377,12 +386,14 @@ function renderSummaryCard(
             <h2>Powers</h2>
           </header>
           {model.powers.length > 0 ? (
-            model.powers.slice(0, 5).map((power) => (
-              <div className="summary-row" key={power.id}>
-                <span>{power.name}</span>
-                <strong>Lv {power.level}</strong>
-              </div>
-            ))
+            <div className="summary-power-list">
+              {model.powers.map((power) => (
+                <div className="summary-mini-row" key={power.id}>
+                  <span>{power.name}</span>
+                  <strong>Lv {power.level}</strong>
+                </div>
+              ))}
+            </div>
           ) : (
             <EmptyList label="No powers." />
           )}
@@ -391,7 +402,7 @@ function renderSummaryCard(
     case "loadout":
       return (
         <button
-          className={getSummaryButtonClass("loadout", activeTabId)}
+          className={getSummaryButtonClass("loadout", "loadout", activeTabId)}
           key="loadout"
           type="button"
           onClick={() => setActiveTabId("loadout")}
@@ -400,12 +411,19 @@ function renderSummaryCard(
             <SheetIcon icon="loadout" />
             <h2>Loadout</h2>
           </header>
-          {model.loadoutSlots.slice(0, 5).map((slot) => (
-            <div className="summary-row" key={slot.slotId}>
-              <span>{slot.label}</span>
-              <strong>{slot.item?.name ?? "Open"}</strong>
-            </div>
-          ))}
+          <div className="summary-loadout-grid" aria-label="Loadout slots">
+            {model.loadoutSlots.map((slot) => (
+              <span
+                className={`summary-loadout-slot ${slot.item ? "equipped" : "open"}`}
+                data-tooltip={getLoadoutTooltip(slot)}
+                key={slot.slotId}
+                title={getLoadoutTooltip(slot)}
+              >
+                <SheetIcon icon={slot.item?.icon ?? slot.icon} />
+                <small>{slot.label}</small>
+              </span>
+            ))}
+          </div>
         </button>
       );
     default:
@@ -595,6 +613,35 @@ export function CharacterSheet({ snapshot, character }: CharacterSheetProps) {
   return (
     <main className="character-shell" aria-label="Convergence character sheet">
       <div className="character-sheet">
+        <header className="sheet-chrome panel-frame" aria-label="Character sheet navigation">
+          <div className="sheet-brand">
+            <SheetIcon icon="book" />
+            <span>PORTALS</span>
+            <strong>game_hub5</strong>
+          </div>
+          <nav className="sheet-actions" aria-label="Primary navigation">
+            <button type="button">
+              <SheetIcon icon="shield" />
+              Main Menu
+            </button>
+            <button type="button">
+              <SheetIcon icon="sword" />
+              Combat Mode
+            </button>
+            <button type="button">
+              <SheetIcon icon="spark" />
+              Player Menu
+            </button>
+          </nav>
+          <div className="sheet-title-mark">
+            <SheetIcon icon="stats" />
+            <strong>Convergence Character Sheet</strong>
+          </div>
+          <button className="sheet-mode-action" type="button">
+            Edit / DM Mode
+          </button>
+        </header>
+
         <section className="sheet-top" aria-label="Core character state">
           <article className="identity-panel panel-frame">
             <div className="portrait-mark" aria-hidden="true">

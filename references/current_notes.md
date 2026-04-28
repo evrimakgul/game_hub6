@@ -25,8 +25,8 @@ This file tracks active reminders for the current implementation block.
 - Character Sheet Tab Framework V1 is now implemented: the first rebuilt React/Vite UI surface uses the accepted top core state, middle summary dashboard, and bottom top-tab detail workspace.
 - Character Sheet Holistic Completion Pass is complete: the middle dashboard now uses `Resistances` instead of duplicate combat summary stats, and the `Stats` detail tab shows the full resistance grid from existing mechanics.
 - The character sheet tab state is UI-local only, and data still flows through `AppDataController`, `buildPlayerCharacterViewModel`, and pure item/knowledge helpers.
-- Next planned character-sheet UI task is `NEW-UI-DESIGN-01E`: an image-fidelity pass to make the sheet closely match the accepted dark reference at `1300 x 975`, with `Resistances` replacing the reference `Combat Summary`. The top section should become shorter, the middle section should roughly double in height and show all resistances, total stats, total skills, powers with levels, and icon-based loadout slots with item hover details, while the bottom detail workspace can become smaller with smaller text.
-- Validation passed for the current pass: `npm run typecheck`, `npm test`, and `npm run build`.
+- `NEW-UI-DESIGN-01E` is complete: the character sheet now has compact header chrome, a shorter first section, a taller second section with all resistance/stat/skill/power/loadout summaries, icon-based loadout slots with item hover details, and a smaller text-dense bottom workspace.
+- Validation passed for the current pass: `npm.cmd run typecheck`, `npm.cmd test`, `npm.cmd run build`, and desktop/mobile browser layout checks.
 
 ## Confirmed Rules For This Block
 - HP must stay capable of going negative.
@@ -109,7 +109,7 @@ This file tracks active reminders for the current implementation block.
 - Mob templates currently use a focused mob editor rather than the full player-sheet UI.
 - Portal progression/run-state automation is still manual; V1 exports one stage at a time into the existing combat dashboard instead of owning an end-to-end portal-run state machine.
 - Player combat mode has own-turn action controls, but full timing/action-budget enforcement remains deferred.
-- New UI design is partially implemented for the player character sheet, with the compact three-section sheet now using top workspace tabs. The character sheet still needs the `NEW-UI-DESIGN-01E` image-fidelity pass, and DM dashboard design remains unimplemented under `NEW-UI-DESIGN-01`.
+- New UI design is partially implemented for the player character sheet, with the compact three-section sheet now using top workspace tabs and the first image-fidelity pass complete. DM dashboard design remains unimplemented under `NEW-UI-DESIGN-01`.
 - Supabase RLS policies are implemented in migration SQL, but still need manual verification against Supabase local/project roles.
 - DM campaign members are currently added by Supabase user UUID rather than by email lookup.
 - The DM Screen now lists only campaigns where the signed-in account has `campaign_members.role = 'dm'`; player session access remains membership-based so the same account can be a DM in one campaign and a player/member in another.

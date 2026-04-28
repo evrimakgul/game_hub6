@@ -2,6 +2,12 @@
 
 ## 2026-04-27
 
+- `NEW-UI-DESIGN-01E` completed.
+  - Added compact app/header chrome to the rebuilt character sheet.
+  - Shortened the first section and reduced text scale in the first and third sections.
+  - Expanded the middle section to show all resistances, total stats, total skills, powers with levels, and loadout icon slots.
+  - Added loadout slot hover details and kept tab/summary selection UI-local.
+  - Validation: `npm.cmd run typecheck`, `npm.cmd test`, `npm.cmd run build`, plus desktop/mobile browser layout checks.
 - `CHAR-SHEET-TABS-01` completed.
   - Added the first rebuilt React/Vite player character sheet on top of `AppDataController` and `buildPlayerCharacterViewModel`.
   - Implemented the accepted three-section layout: always-visible core state, summary-only middle cards, and bottom icon-tab detail workspace.

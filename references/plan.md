@@ -541,7 +541,7 @@ This roadmap is the active implementation source of truth for this branch.
 - Item visibility uses existing item-card ownership checks before showing bonus details.
 - Resistance rows are UI projections over existing resistance mechanics and item/power modifiers.
 
-## Planned Follow-Up: Character Sheet Image-Fidelity Pass
+## Completed Follow-Up: Character Sheet Image-Fidelity Pass
 
 ### 15.1 Reference-Matched Character Sheet
 - Track this as `NEW-UI-DESIGN-01E`.
@@ -564,7 +564,14 @@ This roadmap is the active implementation source of truth for this branch.
 - Make the bottom detail workspace smaller to give the expanded middle section room, and use smaller text especially in the first and third sections.
 - Let only the bottom detail panel scroll internally when content overflows.
 - Enrich the bottom tab contents while keeping top tabs for `Stats`, `Skills`, `Powers`, `Loadout`, `Inventory`, `Knowledge`, `History`, and `Notes`.
-- Verify with desktop and mobile browser screenshots before marking the pass complete.
+- Verify with desktop and mobile browser layout checks before marking the pass complete.
+
+### 15.3 Completed Implementation
+- Added the compact app/header chrome.
+- Reduced first-section height and type scale.
+- Expanded the middle section to show full resistance, total stat, total skill, power-level, and loadout-slot summaries.
+- Added icon-based loadout slots with hover details.
+- Reduced the bottom workspace height and text scale while preserving top tabs and internal detail scrolling.
 
 ## Validation
 - After each meaningful task group run:

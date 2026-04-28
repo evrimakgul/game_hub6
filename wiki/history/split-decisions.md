@@ -19,7 +19,7 @@ Open splits revalidated on 2026-04-17:
 | --- | --- | --- | --- |
 | `COMBAT-ACT-01` | open | Physical attacks and ranged gear work now, but action cost, timing, weapon speed, and multi-attack throughput are still simplified. This gap is intentionally deferred to the very end of the project and may remain unimplemented. | `references/current_notes.md`, `project_tracking/tasks_todo.md`, thread `5` |
 | `DOC-OBJECTIVE-01` | open | `references/project_objective.md` still describes the older manual `Brute Defiance` trigger, while current code, roadmap, and notes reflect the passive version. | `references/project_objective.md`, `references/plan.md`, `references/current_notes.md`, `src/engine/encounterExecutionEngine.ts` |
-| `NEW-UI-DESIGN-01` | open | The old visual UI has been removed. The first rebuilt player character sheet exists, but it still needs the accepted-reference image-fidelity pass (`NEW-UI-DESIGN-01E`), and the DM dashboard/navigation model still need to be designed on top of the pure service layer. | `references/plan.md`, `wiki/runtime/ui-and-routes-map.md` |
+| `NEW-UI-DESIGN-01` | open | The old visual UI has been removed. The player character sheet has its first rebuilt/fidelity pass, but the DM dashboard/navigation model still need to be designed on top of the pure service layer. | `references/plan.md`, `wiki/runtime/ui-and-routes-map.md` |
 
 Resolved splits:
 
@@ -40,7 +40,7 @@ Resolved splits:
 
 - `COMBAT-ACT-01`: keep the timing/action-economy idea recorded, but treat it as endgame-only and optional rather than the default next milestone.
 - `DOC-OBJECTIVE-01`: reconcile the stale current-state objective doc with the passive `Brute Defiance` behavior already live in code.
-- `NEW-UI-DESIGN-01`: continue the new player/DM UI on top of `AppDataController`, persistence helpers, session services, and pure selectors. The next player character-sheet step is `NEW-UI-DESIGN-01E`, a visual fidelity pass against the accepted dark reference image with `Resistances` replacing `Combat Summary`, a shorter top section, a taller summary section, icon loadout slots, and smaller text in sections one and three.
+- `NEW-UI-DESIGN-01`: continue the new player/DM UI on top of `AppDataController`, persistence helpers, session services, and pure selectors. The player character-sheet fidelity pass is complete; the next large unresolved UI surface is the DM dashboard/navigation model.
 
 ## Key Decisions
 

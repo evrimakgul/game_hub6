@@ -29,7 +29,7 @@ The previous route/component UI has been removed. The first rebuilt surface is n
 - Future UI may be Figma-driven, Build Web Apps-driven, or hand-tuned in React/Vite/CSS.
 - New screens should call services/selectors instead of recreating the removed React context/router coupling.
 - Hidden information rules, item knowledge visibility, player/DM data separation, and combat masking must remain enforced by core logic, not by visual-only assumptions.
-- The next character-sheet pass should closely match the accepted dark reference image at `1300 x 975`, while keeping `Resistances` in the middle dashboard where the reference shows `Combat Summary`. The top section should be shorter, the middle section should roughly double in height and show all resistances, total stats, total skills, powers with levels, and icon loadout slots, and the bottom workspace should be smaller with denser text.
+- The character-sheet image-fidelity pass now closely follows the accepted dark reference structure while keeping `Resistances` in the middle dashboard where the reference shows `Combat Summary`.
 - DM dashboard design remains deferred.
 
 ## Key Decisions
@@ -40,12 +40,11 @@ The previous route/component UI has been removed. The first rebuilt surface is n
 - The bottom detail workspace tabs are `Stats`, `Skills`, `Powers`, `Loadout`, `Inventory`, `Knowledge`, `History`, and `Notes`.
 - Middle summary cards act as shortcuts into matching bottom detail tabs instead of expanding in place.
 - The middle dashboard uses `Resistances` instead of duplicating combat summary values; resistance details live in the `Stats` tab and are derived from existing resistance mechanics.
-- `NEW-UI-DESIGN-01E` is a visual fidelity pass only; it should not change mechanics/data contracts or persist tab state.
+- `NEW-UI-DESIGN-01E` stayed UI-only; it did not change mechanics/data contracts or persist tab state.
 
 ## Deferred / Open
 
 - DM interface design.
-- Character-sheet image-fidelity pass against the accepted reference.
 - Rebuilding navigation and screen flows against the pure service layer.
 - Revalidating visual hidden-information boundaries once the new UI exists.
 

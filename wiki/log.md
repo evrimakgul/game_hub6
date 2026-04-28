@@ -193,10 +193,9 @@
 - Updated: `project/current-objective-and-roadmap`
 - Updated: `runtime/ui-and-routes-map`
 
-## [2026-04-27] plan | character sheet image-fidelity pass
-- Recorded `NEW-UI-DESIGN-01E` as the next player character-sheet UI pass.
-- Locked the goal: match the accepted dark reference image at `1300 x 975`, while keeping `Resistances` in place of the reference `Combat Summary`.
-- Added layout notes: shorter first section, taller second section with full resistance/stat/skill/power/loadout summaries, icon loadout slots with hover details, smaller third section, and smaller text.
+## [2026-04-27] refresh | character sheet image-fidelity pass
+- Recorded `NEW-UI-DESIGN-01E` as complete.
+- Reconciled the wiki with the implemented compact header chrome, shorter first section, taller second section with full resistance/stat/skill/power/loadout summaries, icon loadout slots with hover details, smaller third section, and smaller text.
 - Updated: `project/current-objective-and-roadmap`
 - Updated: `project/implemented-vs-deferred`
 - Updated: `runtime/ui-and-routes-map`
