@@ -3,7 +3,7 @@ title: Implemented Vs Deferred
 topic: project
 kind: status
 status: active
-updated: 2026-04-26
+updated: 2026-04-27
 confidence: high
 ---
 
@@ -46,6 +46,7 @@ Deferred or partial:
 - Full portal-run state / boss-clear reward automation / exit unlocking.
 - Broader player combat participation beyond the current own-turn action surface.
 - New player/DM UI design and navigation flows on top of the pure service layer.
+- Character-sheet image-fidelity pass against the accepted dark reference, preserving the `Resistances` summary replacement and the requested taller second section / smaller first and third sections.
 - Timing/action-budget engine.
 
 ## Intended Direction
@@ -67,6 +68,7 @@ Deferred or partial:
 - encounter persistence
 - broader player combat participation beyond own-turn controls
 - new UI design and visual workflow rebuild
+- `NEW-UI-DESIGN-01E` character-sheet image-fidelity pass
 - `REPO-CLEANUP-01`
 
 ## Sources

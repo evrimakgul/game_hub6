@@ -7,6 +7,7 @@
 - `NEW-UI-DESIGN-01B` Core integration: connect screens to `AppDataController`, `OnlineSessionService`, persistence helpers, realtime repositories, and pure selectors.
 - `NEW-UI-DESIGN-01C` Guardrails: preserve hidden combat identity, hidden item bonuses, hidden knowledge, and player/DM data separation in the new UI.
 - `NEW-UI-DESIGN-01D` Browser verification: run the rebuilt UI through desktop/mobile visual checks and core workflow checks before declaring it complete.
+- `NEW-UI-DESIGN-01E` Character Sheet image-fidelity pass: make the rebuilt sheet closely match the accepted dark reference at `1300 x 975`, preserving `Resistances` in place of the reference `Combat Summary`. Scope includes the top app/header chrome, denser/smaller first section, a second section roughly twice its current height showing all resistances, all total stats, all total skills, all powers with levels, and loadout icon slots with item-hover details, plus a smaller top-tab detail workspace with smaller text, internal bottom scrolling, and desktop/mobile browser screenshot checks.
 
 ## Completed
 ### Group 1: Encounter Cast UI Standardization

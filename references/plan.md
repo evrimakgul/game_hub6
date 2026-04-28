@@ -541,6 +541,31 @@ This roadmap is the active implementation source of truth for this branch.
 - Item visibility uses existing item-card ownership checks before showing bonus details.
 - Resistance rows are UI projections over existing resistance mechanics and item/power modifiers.
 
+## Planned Follow-Up: Character Sheet Image-Fidelity Pass
+
+### 15.1 Reference-Matched Character Sheet
+- Track this as `NEW-UI-DESIGN-01E`.
+- Make the current rebuilt character sheet closely match the accepted dark reference image at `1300 x 975`.
+- Keep the user-approved difference: the middle-left summary card is `Resistances`, not `Combat Summary`, because combat summary metrics already live in the top readiness area.
+- Preserve the current data path: `AppDataController` -> `buildPlayerCharacterViewModel` -> `src/ui/characterSheetModel.ts`.
+- Do not change mechanics, item blueprint persistence, hidden-information rules, or UI-local tab state.
+
+### 15.2 Visual And Layout Targets
+- Add the reference-like top app/header chrome and dense command-strip feel.
+- Make the top core more compact, with less wasted vertical space and smaller text.
+- Make the middle summary section roughly twice its current height.
+- The middle summary section should show:
+  - all resistances
+  - all stats as total values
+  - all skills as total values
+  - all powers with levels
+  - all loadout slots as icons, using the equipped item icon when filled and a grayed-out slot icon when empty
+- Loadout item hover states should provide compact item details.
+- Make the bottom detail workspace smaller to give the expanded middle section room, and use smaller text especially in the first and third sections.
+- Let only the bottom detail panel scroll internally when content overflows.
+- Enrich the bottom tab contents while keeping top tabs for `Stats`, `Skills`, `Powers`, `Loadout`, `Inventory`, `Knowledge`, `History`, and `Notes`.
+- Verify with desktop and mobile browser screenshots before marking the pass complete.
+
 ## Validation
 - After each meaningful task group run:
   - `npm run typecheck`

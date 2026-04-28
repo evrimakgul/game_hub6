@@ -25,6 +25,7 @@ The current branch objective has shifted from UI reset into new UI rebuild. The 
 - `UI-RESET-01` is now complete: old route pages, presentation components, UI hooks, navigation wiring, and screen CSS are removed.
 - Core app behavior now has pure TypeScript service entrypoints through `AppDataController`, app data persistence helpers, and `OnlineSessionService`.
 - `CHAR-SHEET-TABS-01` is now complete: the new player character sheet uses an always-visible core-state top section, summary-only middle dashboard, and bottom icon-tab detail workspace.
+- `NEW-UI-DESIGN-01E` is open: the next player character-sheet UI pass should closely match the accepted dark reference image at `1300 x 975`, with `Resistances` replacing the reference `Combat Summary`, a shorter top section, a roughly doubled middle section showing all resistance/stat/skill/power/loadout summaries, and a smaller text-dense bottom workspace.
 - New UI design may use Figma, Build Web Apps, or hand-tuned React/Vite/CSS; DM dashboard design remains deferred.
 - `COMBAT-ACT-01` is now intentionally parked at the very end of the project and may be skipped entirely unless priorities change.
 - Recent completed milestone groups include:
@@ -45,6 +46,7 @@ The current branch objective has shifted from UI reset into new UI rebuild. The 
 - Treat the wiki as the place that reconciles roadmap intent against current implementation facts.
 - Keep future work disciplined around explicit open items rather than restarting already-closed architecture debates.
 - Treat each new UI surface as fresh design on top of core services, not a restoration of deleted routes/components.
+- For the next character-sheet pass, keep the current service/model path and improve visual fidelity only; do not rewrite mechanics or persist visual tab state.
 
 ## Key Decisions
 
@@ -64,6 +66,7 @@ The current branch objective has shifted from UI reset into new UI rebuild. The 
 - Supabase RLS policy verification against a real local/project Supabase environment
 - email/display-name lookup for adding campaign members instead of user UUID entry
 - new player/DM UI design and navigation flows on top of the core service layer
+- `NEW-UI-DESIGN-01E` character-sheet image-fidelity pass against the accepted dark reference
 - DM dashboard tab framework and operational layout
 - `COMBAT-ACT-01` timing and action-economy layer, explicitly deferred to the end and possibly out of scope.
 - `PORTAL-RUNNER-01` full portal-run state, boss-clear reward automation, exit unlocking, and persistent run orchestration.
