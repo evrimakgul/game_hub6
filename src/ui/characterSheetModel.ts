@@ -6,13 +6,19 @@ import {
 import { statGroups } from "../config/characterTemplate.ts";
 import {
   buildItemIndex,
+  canCharacterIdentifyItem,
+  getCharacterArtifactAppraisalLevel,
   getEquipmentItemBySlot,
   getEquipmentSlotLabel,
   getItemBlueprintLabel,
   getItemCompactHeaderSummary,
   getViewerFacingItemRecord,
 } from "../lib/items.ts";
-import { buildPlayerCharacterViewModel } from "../selectors/playerCharacterViewModel.ts";
+import { buildPowerUsageSummary } from "../lib/powerUsage.ts";
+import {
+  buildPlayerCharacterViewModel,
+  type PlayerRollTarget,
+} from "../selectors/playerCharacterViewModel.ts";
 import type { AppDataSnapshot } from "../services/appDataController.ts";
 import {
   DAMAGE_TYPES,
@@ -164,6 +170,7 @@ export type CharacterSheetPowerRow = {
   name: string;
   level: number;
   governingStat: StatId;
+  isCastable: boolean;
 };
 
 export type CharacterSheetItemRow = {
@@ -173,6 +180,11 @@ export type CharacterSheetItemRow = {
   summary: string;
   icon: CharacterSheetIconId;
   isKnown: boolean;
+  isOwned: boolean;
+  isCarried: boolean;
+  isActive: boolean;
+  equippedSlots: string[];
+  canAppraise: boolean;
 };
 
 export type CharacterSheetLoadoutSlot = {
@@ -232,6 +244,9 @@ export type CharacterSheetUiModel = {
     name: string;
     concept: string;
     faction: string;
+    age: number | null;
+    apparelMode: string;
+    gameDateTime: string;
     biographyPrimary: string;
     biographySecondary: string;
     rank: string;
@@ -275,6 +290,14 @@ export type CharacterSheetUiModel = {
   skills: CharacterSheetSkillRow[];
   topSkills: CharacterSheetSkillRow[];
   powers: CharacterSheetPowerRow[];
+  availablePowerOptions: CharacterSheetPowerRow[];
+  powerUsageRows: Array<{
+    id: string;
+    label: string;
+    resetLabel: string;
+    detail: string;
+  }>;
+  rollTargets: PlayerRollTarget[];
   loadoutSlots: CharacterSheetLoadoutSlot[];
   inventoryItems: CharacterSheetItemRow[];
   knowledgeRows: CharacterSheetKnowledgeRow[];
@@ -353,7 +376,9 @@ function hasOwnedItemCard(
 function buildItemRow(
   snapshot: AppDataSnapshot,
   characterId: string,
-  item: SharedItemRecord
+  character: CharacterRecord,
+  item: SharedItemRecord,
+  itemsById: Record<string, SharedItemRecord>
 ): CharacterSheetItemRow {
   const itemRulesContext = {
     itemBlueprints: snapshot.itemBlueprints,
@@ -361,6 +386,7 @@ function buildItemRow(
     itemSubcategoryDefinitions: snapshot.itemSubcategoryDefinitions,
   };
   const isKnown = hasOwnedItemCard(snapshot, characterId, item);
+  const artifactAppraisalLevel = getCharacterArtifactAppraisalLevel(character.sheet);
   const viewerItem = getViewerFacingItemRecord(item, {
     ...itemRulesContext,
     hasOwnedItemCard: isKnown,
@@ -376,6 +402,13 @@ function buildItemRow(
     }),
     icon: getItemIcon(viewerItem),
     isKnown,
+    isOwned: character.sheet.ownedItemIds.includes(item.id),
+    isCarried: character.sheet.inventoryItemIds.includes(item.id),
+    isActive: character.sheet.activeItemIds.includes(item.id),
+    equippedSlots: character.sheet.equipment
+      .filter((entry) => entry.itemId === item.id)
+      .map((entry) => getEquipmentSlotLabel(entry.slot)),
+    canAppraise: !isKnown && canCharacterIdentifyItem(item, artifactAppraisalLevel),
   };
 }
 
@@ -447,7 +480,7 @@ export function buildCharacterSheetUiModel(
       slotId,
       label: getEquipmentSlotLabel(slotId),
       icon: CHARACTER_SHEET_ICON_MAP[slotId] ?? "loadout",
-      item: item ? buildItemRow(snapshot, character.id, item) : null,
+      item: item ? buildItemRow(snapshot, character.id, character, item, itemsById) : null,
       isSupplementary: isSupplementaryEquipmentSlotId(slotId),
     };
   });
@@ -455,7 +488,7 @@ export function buildCharacterSheetUiModel(
   const inventoryItems = sheet.inventoryItemIds
     .map((itemId) => itemsById[itemId] ?? null)
     .filter((item): item is SharedItemRecord => item !== null)
-    .map((item) => buildItemRow(snapshot, character.id, item));
+    .map((item) => buildItemRow(snapshot, character.id, character, item, itemsById));
 
   const knowledgeRows = snapshot.knowledgeRevisions
     .filter((revision) => ownedRevisionIds.has(revision.id))
@@ -491,6 +524,9 @@ export function buildCharacterSheetUiModel(
       name: formatCharacterName(character),
       concept: sheet.concept || "No concept",
       faction: sheet.faction || "No faction",
+      age: sheet.age,
+      apparelMode: sheet.apparelMode,
+      gameDateTime: sheet.gameDateTime,
       biographyPrimary: sheet.biographyPrimary,
       biographySecondary: sheet.biographySecondary,
       rank: playerViewModel.progression.rank,
@@ -562,7 +598,17 @@ export function buildCharacterSheetUiModel(
       name: power.name,
       level: power.level,
       governingStat: power.governingStat,
+      isCastable: true,
     })),
+    availablePowerOptions: playerViewModel.availablePowerOptions.map((power) => ({
+      id: power.id,
+      name: power.name,
+      level: 0,
+      governingStat: power.governingStat,
+      isCastable: false,
+    })),
+    powerUsageRows: buildPowerUsageSummary(sheet),
+    rollTargets: playerViewModel.rollTargets,
     loadoutSlots,
     inventoryItems,
     knowledgeRows,

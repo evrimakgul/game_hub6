@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { createAppDataController } from "./services/appDataController.ts";
 import { CharacterSheet } from "./ui/CharacterSheet.tsx";
+import { createCharacterSheetActions } from "./ui/characterSheetActions.ts";
 
 function getBrowserStorage(): Storage | null {
   return typeof window === "undefined" ? null : window.localStorage;
@@ -11,6 +12,10 @@ export default function App() {
   const controller = useMemo(
     () => createAppDataController({ storage: getBrowserStorage() }),
     []
+  );
+  const characterSheetActions = useMemo(
+    () => createCharacterSheetActions(controller),
+    [controller]
   );
   const [snapshot, setSnapshot] = useState(() => controller.getSnapshot());
 
@@ -35,5 +40,11 @@ export default function App() {
     );
   }
 
-  return <CharacterSheet snapshot={snapshot} character={activeCharacter} />;
+  return (
+    <CharacterSheet
+      actions={characterSheetActions}
+      snapshot={snapshot}
+      character={activeCharacter}
+    />
+  );
 }

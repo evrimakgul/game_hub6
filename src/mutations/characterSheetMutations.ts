@@ -1,12 +1,12 @@
-import { buildCharacterDerivedValues } from "../config/characterRuntime";
+import { buildCharacterDerivedValues } from "../config/characterRuntime.ts";
 import type {
   CharacterDraft,
   PowerEntry,
-} from "../config/characterTemplate";
-import { buildGameHistoryNoteEntry, prependGameHistoryEntry } from "../lib/historyEntries";
-import { getDecrementRefund, getIncrementCost } from "../lib/progressionCosts";
-import { T1_POWER_XP_BY_LEVEL, T1_SKILL_XP_BY_LEVEL, STAT_XP_BY_LEVEL } from "../rules/xpTables";
-import type { StatId } from "../types/character";
+} from "../config/characterTemplate.ts";
+import { buildGameHistoryNoteEntry, prependGameHistoryEntry } from "../lib/historyEntries.ts";
+import { getDecrementRefund, getIncrementCost } from "../lib/progressionCosts.ts";
+import { T1_POWER_XP_BY_LEVEL, T1_SKILL_XP_BY_LEVEL, STAT_XP_BY_LEVEL } from "../rules/xpTables.ts";
+import type { StatId } from "../types/character.ts";
 import type { SharedItemRecord } from "../types/items.ts";
 
 export type RuntimeEditableField =
